@@ -186,9 +186,13 @@ function run(binary: string, args: string[]): Promise<void> {
 /**
  * Runs FFmpeg with the filtergraph read from a temp file instead of inline. The
  * per-word graph can be tens of thousands of chars, which overflows the OS
- * command-line limit (Windows throws `spawn ENAMETOOLONG`). The `-/filter_complex
- * <file>` syntax (FFmpeg 5.1+) reads the option value from a file, keeping the
- * argv small on every platform.
+ * command-line limit (Windows throws `spawn ENAMETOOLONG`).
+ *
+ * Two file-based syntaxes exist and each FFmpeg build only supports one:
+ *   - `-/filter_complex <file>`  — modern generic "read option from file" (7.x)
+ *   - `-filter_complex_script <file>` — legacy dedicated option (<=6.x)
+ * We try the modern one first and fall back to the legacy one when the build
+ * reports the option is unrecognized, so it works on any FFmpeg version.
  */
 async function runWithFilterComplex(
   binary: string,
@@ -199,11 +203,23 @@ async function runWithFilterComplex(
   const directory = mkdtempSync(join(tmpdir(), 'lyric-video-filter-'));
   const scriptPath = join(directory, 'filtergraph.txt');
   writeFileSync(scriptPath, complex);
+  const attempt = (flag: string) => run(binary, ['-y', ...inputArgs, flag, scriptPath, ...tailArgs]);
   try {
-    await run(binary, ['-y', ...inputArgs, '-/filter_complex', scriptPath, ...tailArgs]);
+    try {
+      await attempt('-/filter_complex');
+    } catch (error) {
+      if (!isUnrecognizedOptionError(error)) throw error;
+      await attempt('-filter_complex_script');
+    }
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+}
+
+/** True when FFmpeg rejected an option it doesn't know (version mismatch). */
+function isUnrecognizedOptionError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /Unrecognized option|Option not found/i.test(message);
 }
 
 function readMediaDuration(binary: string, mediaPath: string): Promise<number | undefined> {
