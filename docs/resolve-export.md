@@ -67,9 +67,26 @@ drop your own background video and grade in the editor.
 - **Text size** — Text+ `Size` is mapped as `sizePx / frameHeight`. If titles
   look too big/small, adjust `SIZE_SCALE` at the top of
   `scripts/resolve/resolve_import.py`.
-- **Word timing** — quick-render lays words back-to-back in fixed slots, so they
-  land contiguously. Audio-aligned configs with gaps may need per-clip duration
-  tweaks or spacers.
+- **Word timing** — words are appended one after another in order. Each Text+
+  clip keeps Resolve's default title length, so the line plays back-to-back
+  (matching quick-render's contiguous layout). Slip the clips or trim on the Edit
+  page if you need exact per-word source timing.
+
+## Troubleshooting
+
+- **"Font not found … Semibold"** — Text+ has a separate `Style` input whose
+  default weight (e.g. Semibold) may not exist for your font. The importer forces
+  `Style = "Regular"`. If a font's only face has another name, add it to
+  `FONT_STYLE_OVERRIDES` in `resolve_import.py`.
+- **Text shows but nothing animates** — keyframes must be written at the clip's
+  global timeline frame, so the importer offsets them by the clip's start
+  (`item.GetStart()`). If your Resolve build uses clip-local (0-based) comp time
+  instead, set that offset to `0` in `import_words` (pass `0` to
+  `apply_keyframes`).
+- **Words out of order / import is slow** — titles are appended at the running
+  end of the timeline (not inserted at absolute timecodes), which avoids
+  ripple-splitting earlier clips. Keyframe writes are batched inside
+  `comp.Lock()` / `comp.EndUndo()` so Fusion recomputes once per word.
 
 ## Files
 
