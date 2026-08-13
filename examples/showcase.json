@@ -1,0 +1,1218 @@
+{
+  "title": "FX Showcase",
+  "theme": "dark",
+  "resolution": {
+    "width": 1280,
+    "height": 720,
+    "fps": 24
+  },
+  "typography": {
+    "font": "Impact",
+    "position": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sections": [
+    {
+      "style": {
+        "background": "industrial"
+      },
+      "lines": [
+        {
+          "text": "— ANIMATIONS —",
+          "start": 0,
+          "end": 1.6,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffd24a",
+            "animation": "fade_up"
+          },
+          "words": [
+            {
+              "text": "— ANIMATIONS —",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffd24a",
+                "animation": "fade_up"
+              }
+            }
+          ]
+        },
+        {
+          "text": "none",
+          "start": 1.6,
+          "end": 2.8,
+          "style": {
+            "animation": "none",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "none",
+              "style": {
+                "animation": "none",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "fade",
+          "start": 2.8,
+          "end": 4,
+          "style": {
+            "animation": "fade",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "fade",
+              "style": {
+                "animation": "fade",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "fade_up",
+          "start": 4,
+          "end": 5.2,
+          "style": {
+            "animation": "fade_up",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "fade_up",
+              "style": {
+                "animation": "fade_up",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "slide_up",
+          "start": 5.2,
+          "end": 6.4,
+          "style": {
+            "animation": "slide_up",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "slide_up",
+              "style": {
+                "animation": "slide_up",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "slide_down",
+          "start": 6.4,
+          "end": 7.6000000000000005,
+          "style": {
+            "animation": "slide_down",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "slide_down",
+              "style": {
+                "animation": "slide_down",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "typewriter",
+          "start": 7.6000000000000005,
+          "end": 8.8,
+          "style": {
+            "animation": "typewriter",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "typewriter",
+              "style": {
+                "animation": "typewriter",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "pop",
+          "start": 8.8,
+          "end": 10,
+          "style": {
+            "animation": "pop",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "pop",
+              "style": {
+                "animation": "pop",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "blur_in",
+          "start": 10,
+          "end": 11.2,
+          "style": {
+            "animation": "blur_in",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "blur_in",
+              "style": {
+                "animation": "blur_in",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "punch_in",
+          "start": 11.2,
+          "end": 12.399999999999999,
+          "style": {
+            "animation": "punch_in",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "punch_in",
+              "style": {
+                "animation": "punch_in",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "impact",
+          "start": 12.399999999999999,
+          "end": 13.599999999999998,
+          "style": {
+            "animation": "impact",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "impact",
+              "style": {
+                "animation": "impact",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "smash",
+          "start": 13.599999999999998,
+          "end": 14.799999999999997,
+          "style": {
+            "animation": "smash",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "smash",
+              "style": {
+                "animation": "smash",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "rage",
+          "start": 14.799999999999997,
+          "end": 15.999999999999996,
+          "style": {
+            "animation": "rage",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "rage",
+              "style": {
+                "animation": "rage",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "scream",
+          "start": 15.999999999999996,
+          "end": 17.199999999999996,
+          "style": {
+            "animation": "scream",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "scream",
+              "style": {
+                "animation": "scream",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "shake",
+          "start": 17.199999999999996,
+          "end": 18.399999999999995,
+          "style": {
+            "animation": "shake",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "shake",
+              "style": {
+                "animation": "shake",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "whisper",
+          "start": 18.399999999999995,
+          "end": 19.599999999999994,
+          "style": {
+            "animation": "whisper",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "whisper",
+              "style": {
+                "animation": "whisper",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "ghost",
+          "start": 19.599999999999994,
+          "end": 20.799999999999994,
+          "style": {
+            "animation": "ghost",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "ghost",
+              "style": {
+                "animation": "ghost",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "void",
+          "start": 20.799999999999994,
+          "end": 21.999999999999993,
+          "style": {
+            "animation": "void",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "void",
+              "style": {
+                "animation": "void",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "burn_in",
+          "start": 21.999999999999993,
+          "end": 23.199999999999992,
+          "style": {
+            "animation": "burn_in",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "burn_in",
+              "style": {
+                "animation": "burn_in",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "glitch",
+          "start": 23.199999999999992,
+          "end": 24.39999999999999,
+          "style": {
+            "animation": "glitch",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "glitch",
+              "style": {
+                "animation": "glitch",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "corrupted",
+          "start": 24.39999999999999,
+          "end": 25.59999999999999,
+          "style": {
+            "animation": "corrupted",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "corrupted",
+              "style": {
+                "animation": "corrupted",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "static_burst",
+          "start": 25.59999999999999,
+          "end": 26.79999999999999,
+          "style": {
+            "animation": "static_burst",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "static_burst",
+              "style": {
+                "animation": "static_burst",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "crt",
+          "start": 26.79999999999999,
+          "end": 27.99999999999999,
+          "style": {
+            "animation": "crt",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "crt",
+              "style": {
+                "animation": "crt",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "distort",
+          "start": 27.99999999999999,
+          "end": 29.19999999999999,
+          "style": {
+            "animation": "distort",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "distort",
+              "style": {
+                "animation": "distort",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "distortion",
+          "start": 29.19999999999999,
+          "end": 30.399999999999988,
+          "style": {
+            "animation": "distortion",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "distortion",
+              "style": {
+                "animation": "distortion",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "static",
+          "start": 30.399999999999988,
+          "end": 31.599999999999987,
+          "style": {
+            "animation": "static",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "static",
+              "style": {
+                "animation": "static",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "breakdown",
+          "start": 31.599999999999987,
+          "end": 32.79999999999999,
+          "style": {
+            "animation": "breakdown",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "breakdown",
+              "style": {
+                "animation": "breakdown",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "hard_cut",
+          "start": 32.79999999999999,
+          "end": 33.99999999999999,
+          "style": {
+            "animation": "hard_cut",
+            "color": "#e9edf2",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "hard_cut",
+              "style": {
+                "animation": "hard_cut",
+                "color": "#e9edf2",
+                "fontSize": 72
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "industrial"
+      },
+      "lines": [
+        {
+          "text": "— EMPHASIS —",
+          "start": 33.99999999999999,
+          "end": 35.599999999999994,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffd24a",
+            "animation": "fade_up"
+          },
+          "words": [
+            {
+              "text": "— EMPHASIS —",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffd24a",
+                "animation": "fade_up"
+              }
+            }
+          ]
+        },
+        {
+          "text": "normal",
+          "start": 35.599999999999994,
+          "end": 36.8,
+          "style": {
+            "emphasis": "normal",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "normal",
+              "style": {
+                "emphasis": "normal",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "subtle",
+          "start": 36.8,
+          "end": 38,
+          "style": {
+            "emphasis": "subtle",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "subtle",
+              "style": {
+                "emphasis": "subtle",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "emphasis",
+          "start": 38,
+          "end": 39.2,
+          "style": {
+            "emphasis": "emphasis",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "emphasis",
+              "style": {
+                "emphasis": "emphasis",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "strong",
+          "start": 39.2,
+          "end": 40.400000000000006,
+          "style": {
+            "emphasis": "strong",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "strong",
+              "style": {
+                "emphasis": "strong",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "shout",
+          "start": 40.400000000000006,
+          "end": 41.60000000000001,
+          "style": {
+            "emphasis": "shout",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "shout",
+              "style": {
+                "emphasis": "shout",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "scream",
+          "start": 41.60000000000001,
+          "end": 42.80000000000001,
+          "style": {
+            "emphasis": "scream",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "scream",
+              "style": {
+                "emphasis": "scream",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "whisper",
+          "start": 42.80000000000001,
+          "end": 44.000000000000014,
+          "style": {
+            "emphasis": "whisper",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "whisper",
+              "style": {
+                "emphasis": "whisper",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "anger",
+          "start": 44.000000000000014,
+          "end": 45.20000000000002,
+          "style": {
+            "emphasis": "anger",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "anger",
+              "style": {
+                "emphasis": "anger",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "cold",
+          "start": 45.20000000000002,
+          "end": 46.40000000000002,
+          "style": {
+            "emphasis": "cold",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "cold",
+              "style": {
+                "emphasis": "cold",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "corrupted",
+          "start": 46.40000000000002,
+          "end": 47.60000000000002,
+          "style": {
+            "emphasis": "corrupted",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "corrupted",
+              "style": {
+                "emphasis": "corrupted",
+                "fontSize": 72
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "industrial"
+      },
+      "lines": [
+        {
+          "text": "— TREATMENTS —",
+          "start": 47.60000000000002,
+          "end": 49.200000000000024,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffd24a",
+            "animation": "fade_up"
+          },
+          "words": [
+            {
+              "text": "— TREATMENTS —",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffd24a",
+                "animation": "fade_up"
+              }
+            }
+          ]
+        },
+        {
+          "text": "none",
+          "start": 49.200000000000024,
+          "end": 50.40000000000003,
+          "style": {
+            "treatment": "none",
+            "color": "#c8ffd0",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "none",
+              "style": {
+                "treatment": "none",
+                "color": "#c8ffd0",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "glitch",
+          "start": 50.40000000000003,
+          "end": 51.60000000000003,
+          "style": {
+            "treatment": "glitch",
+            "color": "#c8ffd0",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "glitch",
+              "style": {
+                "treatment": "glitch",
+                "color": "#c8ffd0",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "corrupted",
+          "start": 51.60000000000003,
+          "end": 52.80000000000003,
+          "style": {
+            "treatment": "corrupted",
+            "color": "#c8ffd0",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "corrupted",
+              "style": {
+                "treatment": "corrupted",
+                "color": "#c8ffd0",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "ghost",
+          "start": 52.80000000000003,
+          "end": 54.000000000000036,
+          "style": {
+            "treatment": "ghost",
+            "color": "#c8ffd0",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "ghost",
+              "style": {
+                "treatment": "ghost",
+                "color": "#c8ffd0",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "static",
+          "start": 54.000000000000036,
+          "end": 55.20000000000004,
+          "style": {
+            "treatment": "static",
+            "color": "#c8ffd0",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "static",
+              "style": {
+                "treatment": "static",
+                "color": "#c8ffd0",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "distort",
+          "start": 55.20000000000004,
+          "end": 56.40000000000004,
+          "style": {
+            "treatment": "distort",
+            "color": "#c8ffd0",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "distort",
+              "style": {
+                "treatment": "distort",
+                "color": "#c8ffd0",
+                "fontSize": 72
+              }
+            }
+          ]
+        },
+        {
+          "text": "rgb_split",
+          "start": 56.40000000000004,
+          "end": 57.600000000000044,
+          "style": {
+            "treatment": "rgb_split",
+            "color": "#c8ffd0",
+            "fontSize": 72
+          },
+          "words": [
+            {
+              "text": "rgb_split",
+              "style": {
+                "treatment": "rgb_split",
+                "color": "#c8ffd0",
+                "fontSize": 72
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "industrial"
+      },
+      "lines": [
+        {
+          "text": "— BACKGROUNDS —",
+          "start": 57.600000000000044,
+          "end": 59.200000000000045,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffd24a",
+            "animation": "fade_up"
+          },
+          "words": [
+            {
+              "text": "— BACKGROUNDS —",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffd24a",
+                "animation": "fade_up"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "blackout"
+      },
+      "lines": [
+        {
+          "text": "blackout",
+          "start": 59.200000000000045,
+          "end": 60.80000000000005,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "blackout",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "industrial"
+      },
+      "lines": [
+        {
+          "text": "industrial",
+          "start": 60.80000000000005,
+          "end": 62.40000000000005,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "industrial",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "crt"
+      },
+      "lines": [
+        {
+          "text": "crt",
+          "start": 62.40000000000005,
+          "end": 64.00000000000004,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "crt",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "static"
+      },
+      "lines": [
+        {
+          "text": "static",
+          "start": 64.00000000000004,
+          "end": 65.60000000000004,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "static",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "red_room"
+      },
+      "lines": [
+        {
+          "text": "red_room",
+          "start": 65.60000000000004,
+          "end": 67.20000000000003,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "red_room",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "dark_grain"
+      },
+      "lines": [
+        {
+          "text": "dark_grain",
+          "start": 67.20000000000003,
+          "end": 68.80000000000003,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "dark_grain",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "camcorder"
+      },
+      "lines": [
+        {
+          "text": "camcorder",
+          "start": 68.80000000000003,
+          "end": 70.40000000000002,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "camcorder",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "style": {
+        "background": "distorted"
+      },
+      "lines": [
+        {
+          "text": "distorted",
+          "start": 70.40000000000002,
+          "end": 72.00000000000001,
+          "style": {
+            "emphasis": "emphasis",
+            "color": "#ffffff",
+            "fontSize": 84,
+            "animation": "fade"
+          },
+          "words": [
+            {
+              "text": "distorted",
+              "style": {
+                "emphasis": "emphasis",
+                "color": "#ffffff",
+                "fontSize": 84,
+                "animation": "fade"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

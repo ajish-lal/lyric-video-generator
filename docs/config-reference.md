@@ -21,6 +21,15 @@ npx tsx src/cli.ts presets            # all categories
 npx tsx src/cli.ts presets animation  # one category
 ```
 
+You can also **generate** a starting config automatically from audio (it
+transcribes for timing, aligns your lyrics file when given, inlines a template,
+and writes the JSON) with the `create` command:
+
+```bash
+npx tsx src/cli.ts create --audio input/song.mp3 --input input/lyrics.txt --template nu-metal
+# → writes output/song.json (edit it) and output/song.mp4
+```
+
 ---
 
 ## 1. How authoring works (read this first)
@@ -57,6 +66,7 @@ npx tsx src/cli.ts presets animation  # one category
   "animation": "fade_up",             // global default animation (name or object)
   "background": { /* Background, see §5 */ },
   "effects":    { /* Effects, see §6 */ },
+  "musicViz":   { /* Music visualizer, see §13 */ },
   "sections":   [ /* SectionConfig, see §4 */ ],
   "lines":      [ /* optional per-line overrides */ ],
   "wordStyles": { "rise": "anger", "dark": { "color": "#9fdcff" } }
@@ -304,7 +314,62 @@ These mainly nudge the look and pick a matching glitch/ghost animation.
 
 ---
 
-## 13. Rules for generating a config (LLM checklist)
+## 13. Music visualizer (`musicViz`)
+
+An optional audio-reactive strip (waveform / bars / spectrum) composited over
+the finished frame with a neon glow and, optionally, a fading reflection. It is
+screen-blended, so its black background drops out and only the bright waveform
+shows. **Requires an `audio` track** — with no audio there is nothing to react
+to and the visualizer is skipped.
+
+```jsonc
+"musicViz": {
+  "enabled": true,
+  "mode": "bars",            // "wave" | "bars" | "spectrum"
+  "position": "bottom",      // "top" | "center" | "bottom"
+  "colors": ["#eaeaea"],     // cycled across the wave/bars
+  "glow": 4,                 // bloom strength (blur sigma); 0 disables
+  "height": 0.15,            // strip height as a fraction of frame height
+  "reflection": true          // fading mirrored copy beneath the strip
+}
+```
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `enabled` | boolean | — | Must be `true` to render the visualizer. |
+| `mode` | `wave` \| `bars` \| `spectrum` | `wave` | `wave` = centered line, `bars` = frequency bars, `spectrum` = scrolling spectrogram. |
+| `position` | `top` \| `center` \| `bottom` | `bottom` | Where the strip sits. |
+| `height` | number (0–1) | `0.18` | Strip height as a fraction of frame height. |
+| `margin` | number (0–1) | `0.05` | Gap from the frame edge (fraction of height). |
+| `colors` | string[] | cyan→pink | Colours cycled across the wave/bars. |
+| `glow` | number | `8` | Neon bloom strength (blur sigma). Lower = crisper; `0` = off. |
+| `reflection` | boolean | `false` | Adds a fading mirrored copy below the strip. |
+
+**Tuning tips.** `glow` is the biggest lever on the "processed" look — at high
+values the bloom bleeds across the gaps between bars. For a clean read, try
+`glow: 2–4` with `reflection: false`; for full neon, raise `glow` and enable
+`reflection`. Pure white (`#ffffff`) blooms hardest; a slightly dimmed white like
+`#eaeaea` keeps bars distinct.
+
+**CLI shortcuts** (an alternative to JSON; the JSON config wins if both are set):
+
+```bash
+# --viz [mode] enables it; --viz-color is repeatable; --viz-reflect adds a reflection
+npx tsx src/cli.ts render <config.json> --output output/v.mp4 \
+  --viz bars --viz-color "#eaeaea" --viz-reflect
+```
+
+To add or update the visualizer **as a separate step** (writes the `musicViz`
+block into the config so you can render it, tweak, and re-render):
+
+```bash
+npx tsx src/cli.ts viz <config.json> bars --viz-color "#eaeaea" --viz-reflect --glow 4
+npx tsx src/cli.ts viz <config.json> --off      # remove it again
+```
+
+---
+
+## 14. Rules for generating a config (LLM checklist)
 
 1. Set `lyrics` to the lyrics file path; do not inline lyrics unless asked.
 2. Choose ONE `font` (Impact suits aggressive genres) and keep colors within a

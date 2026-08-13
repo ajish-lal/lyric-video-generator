@@ -1,0 +1,14 @@
+{
+  "name": "rock",
+  "description": "Classic/alt rock: bold condensed type, punchy choruses, warm grit.",
+  "theme": "dark",
+  "effects": { "temperature": 0.25, "contrast": 1.15, "saturation": 0.7 },
+  "sections": {
+    "intro": { "fontSize": 68, "color": "#d7dee6", "animation": "fade", "background": "dark_grain" },
+    "verse": { "font": "DIN Condensed Bold", "fontSize": 80, "color": "#f1f4f8", "animation": "fade_up", "background": "industrial" },
+    "chorus": { "font": "Impact", "fontSize": 104, "color": "#ffd24a", "animation": "punch_in", "background": "industrial" },
+    "bridge": { "fontSize": 82, "color": "#c7d2df", "animation": "fade", "background": "dark_grain" },
+    "breakdown": { "fontSize": 116, "fontWeight": 900, "color": "#ffffff", "animation": "smash", "background": "static" },
+    "outro": { "fontSize": 68, "color": "#d7dee6", "animation": "fade", "background": "dark_grain" }
+  }
+}

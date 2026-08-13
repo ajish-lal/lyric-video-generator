@@ -1,0 +1,14 @@
+{
+  "name": "cinematic",
+  "description": "Moody cinematic dark: soft serif verses building into a bold chorus.",
+  "theme": "dark",
+  "typography": { "font": "Baskerville" },
+  "sections": {
+    "intro": { "fontSize": 68, "color": "#c7d2df", "animation": "fade", "background": "dark_grain" },
+    "verse": { "font": "Baskerville", "fontSize": 74, "color": "#e8eef5", "animation": "fade_up", "background": "dark_grain" },
+    "chorus": { "font": "Impact", "fontSize": 100, "color": "#ffffff", "animation": "impact", "background": "industrial" },
+    "bridge": { "fontSize": 80, "color": "#d8f7ff", "animation": "fade", "background": "dark_grain" },
+    "breakdown": { "preset": "breakdown" },
+    "outro": { "fontSize": 68, "color": "#c7d2df", "animation": "fade", "background": "dark_grain" }
+  }
+}

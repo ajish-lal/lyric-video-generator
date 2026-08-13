@@ -10,6 +10,8 @@
  * exactly like before.
  */
 
+import type { MusicVizConfig } from './render.js';
+
 /** Normalized 0..1 position (resolution independent). */
 export interface Position {
   x?: number;
@@ -149,6 +151,8 @@ export interface ProjectConfig {
   lines?: LineConfig[];
   /** match by exact (case-insensitive) word text; value may be an emphasis name or a style. */
   wordStyles?: Record<string, StyleProperties | string>;
+  /** audio-reactive visualizer drawn over the frame (needs an audio track). */
+  musicViz?: MusicVizConfig;
 }
 
 // ---------------------------------------------------------------------------

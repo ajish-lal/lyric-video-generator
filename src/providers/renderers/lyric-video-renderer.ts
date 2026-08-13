@@ -6,9 +6,26 @@ import type { Renderer, RenderResult, RenderOptions } from '../../core/interface
 import type { Project, Word } from '../../core/models/project.js';
 import type { ResolvedWordRender } from '../../core/models/customization.js';
 import { DEFAULT_EFFECTS } from '../../customization/apply.js';
-import { buildGradeChain, buildWordDrawText, colorToFfmpeg } from './text-filter.js';
+import { buildGradeChain, buildMusicVizNodes, buildWordDrawText, colorToFfmpeg } from './text-filter.js';
+import type { MusicVizConfig, MusicVizMode } from '../../core/models/render.js';
 
 const DEFAULT_OUTPUT = 'output/lyric-video.mp4';
+
+/**
+ * Resolves the music visualizer config. An explicit `config.musicViz` wins;
+ * otherwise `MUSIC_VIZ=wave|bars|spectrum` (or `1`/`on`) enables a default
+ * bottom neon wave so the CLI and scripts can toggle it without deep config.
+ */
+function resolveMusicViz(musicViz: MusicVizConfig | undefined): MusicVizConfig | undefined {
+  if (musicViz?.enabled) return musicViz;
+  const env = process.env.MUSIC_VIZ?.trim().toLowerCase();
+  if (!env || env === '0' || env === 'off' || env === 'false') return undefined;
+  const mode = (['wave', 'bars', 'spectrum'].includes(env) ? env : 'wave') as MusicVizMode;
+  const colorsEnv = process.env.MUSIC_VIZ_COLORS?.trim();
+  const colors = colorsEnv ? colorsEnv.split(/[,|]/).map((c) => c.trim()).filter(Boolean) : undefined;
+  const reflection = ['1', 'on', 'true', 'yes'].includes((process.env.MUSIC_VIZ_REFLECT ?? '').trim().toLowerCase());
+  return { enabled: true, mode, reflection, ...(colors && colors.length > 0 ? { colors } : {}) };
+}
 
 /**
  * Resolves the FFmpeg binary to use. The bundled `ffmpeg-static` build does not
@@ -37,7 +54,7 @@ const FONT_FILE_CANDIDATES: Record<string, string[]> = {
   impact: ['/System/Library/Fonts/Supplemental/Impact.ttf'],
   'arial black': ['/System/Library/Fonts/Supplemental/Arial Black.ttf'],
   'din condensed bold': ['/System/Library/Fonts/Supplemental/DIN Condensed Bold.ttf'],
-  georgia: ['/System/Library/Fonts/Supplemental/Georgia.ttf'],
+  baskerville: ['/System/Library/Fonts/Supplemental/Baskerville.ttc'],
   arial: ['/System/Library/Fonts/Supplemental/Arial.ttf'],
 };
 
@@ -75,6 +92,22 @@ function resolveTextureFile(): string | undefined {
 
 function asFfmpegColor(value: string): string {
   return /^(#[0-9a-f]{6}|0x[0-9a-f]{6})$/i.test(value) ? value : '#111827';
+}
+
+/**
+ * Selects the output video encoder args. Set `VIDEO_ENCODER=nvenc` (or `GPU=1`)
+ * to use the NVIDIA hardware encoder (`h264_nvenc`) instead of the CPU
+ * `libx264` encoder. NVENC requires an FFmpeg build compiled with NVENC support
+ * and up-to-date NVIDIA drivers; point `FFMPEG_PATH` at such a build if the
+ * default one lacks it. Falls back to CPU encoding when not requested.
+ */
+function videoEncoderArgs(): string[] {
+  const choice = (process.env.VIDEO_ENCODER ?? (process.env.GPU ? 'nvenc' : '')).trim().toLowerCase();
+  if (choice === 'nvenc' || choice === 'h264_nvenc' || choice === 'gpu') {
+    // p5 ~ medium; VBR with a constant-quality target keeps quality close to crf 20.
+    return ['-c:v', 'h264_nvenc', '-preset', 'p5', '-rc', 'vbr', '-cq', '20', '-b:v', '0', '-pix_fmt', 'yuv420p', '-movflags', '+faststart'];
+  }
+  return ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart'];
 }
 
 function gradientType(type: Project['renderConfig']['style']['background']['gradientType']): number {
@@ -247,7 +280,9 @@ export class LyricVideoRenderer implements Renderer {
     // is carried by the grade: bloom glow, cold desaturation, vignette, a touch
     // of chromatic aberration, and a slow push-in for energy.
     const totalFrames = Math.max(1, Math.round(duration * fps));
-    const complex = [
+    const viz = audioIndex !== undefined ? resolveMusicViz(config.musicViz) : undefined;
+    const finalVideoLabel = viz ? 'basev' : 'outv';
+    const complexParts = [
       `[0:v]${backgroundFilters.join(',')}[bg]`,
       `color=c=black:s=${size}:r=${fps},${[...filters, 'format=gray'].join(',')},split=3[txtA][txtB][txtC]`,
       grungeNode,
@@ -264,15 +299,22 @@ export class LyricVideoRenderer implements Renderer {
       `[cbloom]hue=s=0,curves=m='0/0 0.62/0 0.8/0.45 1/1',gblur=sigma=16[bloom]`,
       `[cbase][bloom]blend=all_mode=screen:all_opacity=0.38[lit]`,
       `[lit]colorbalance=rs=-0.03:bs=0.05:bm=0.02,eq=contrast=1.18:saturation=0.55:gamma=0.95,vignette=PI/${vignetteAngle},rgbashift=rh=2:bh=-2[graded]`,
-      `[graded]zoompan=z='min(1.0+0.06*on/${totalFrames},1.06)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${size}:fps=${fps}[outv]`,
-    ].join(';');
+      `[graded]zoompan=z='min(1.0+0.06*on/${totalFrames},1.06)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${size}:fps=${fps}[${finalVideoLabel}]`,
+    ];
+    let audioMap: string[] = audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`] : [];
+    if (viz && audioIndex !== undefined) {
+      const vizNodes = buildMusicVizNodes({ audioInputIndex: audioIndex, width: W, height: H, fps, viz, baseLabel: 'basev', outLabel: 'outv' });
+      complexParts.push(...vizNodes.nodes);
+      audioMap = ['-map', `[${vizNodes.audioOutLabel}]`];
+    }
+    const complex = complexParts.join(';');
     const args = [
       '-y', ...inputArgs,
       '-filter_complex', complex,
       '-map', '[outv]',
-      ...(audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`, '-c:a', 'aac', '-b:a', '192k'] : []),
+      ...(audioIndex !== undefined ? [...audioMap, '-c:a', 'aac', '-b:a', '192k'] : []),
       '-t', String(duration),
-      '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outputPath,
+      ...videoEncoderArgs(), outputPath,
     ];
     await run(ffmpegPath, args);
 
@@ -350,6 +392,7 @@ export class LyricVideoRenderer implements Renderer {
       inputArgs.push('-stream_loop', '-1', '-i', project.audioPath);
       audioIndex = nextInput++;
     }
+    const viz = audioIndex !== undefined ? resolveMusicViz(config.musicViz) : undefined;
 
     // --- background node ---
     // Grain is intentionally NOT applied here; it is added once over the whole
@@ -397,16 +440,23 @@ export class LyricVideoRenderer implements Renderer {
       nodes.push(`[${preGrade}][tex]blend=all_mode=softlight:all_opacity=0.12[textured]`);
       preGrade = 'textured';
     }
-    nodes.push(...buildGradeChain(effects, preGrade, size, fps, totalFrames));
+    nodes.push(...buildGradeChain(effects, preGrade, size, fps, totalFrames, viz ? 'basev' : 'outv'));
+
+    let audioMap: string[] = audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`] : [];
+    if (viz && audioIndex !== undefined) {
+      const vizNodes = buildMusicVizNodes({ audioInputIndex: audioIndex, width: W, height: H, fps, viz, baseLabel: 'basev', outLabel: 'outv' });
+      nodes.push(...vizNodes.nodes);
+      audioMap = ['-map', `[${vizNodes.audioOutLabel}]`];
+    }
 
     const complex = nodes.join(';');
     const args = [
       '-y', ...inputArgs,
       '-filter_complex', complex,
       '-map', '[outv]',
-      ...(audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`, '-c:a', 'aac', '-b:a', '192k'] : []),
+      ...(audioIndex !== undefined ? [...audioMap, '-c:a', 'aac', '-b:a', '192k'] : []),
       '-t', String(duration),
-      '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outputPath,
+      ...videoEncoderArgs(), outputPath,
     ];
     await run(ffmpegPath, args);
     if (!existsSync(outputPath)) throw new Error('FFmpeg reported success but no output file was created.');
@@ -432,6 +482,9 @@ export class LyricVideoRenderer implements Renderer {
     fallback: () => ResolvedWordRender,
   ): string {
     const r = word.render ?? fallback();
+    if (r.animation.motion === 'typewriter' && displayText.length > 1) {
+      return this.drawTypewriter(r, displayText, start, end, W, H);
+    }
     return buildWordDrawText({
       safeText: escapeFilterValue(displayText),
       fontToken: fontToken(r.fontFamily),
@@ -448,5 +501,34 @@ export class LyricVideoRenderer implements Renderer {
       stroke: r.stroke,
       shadow: r.shadow,
     });
+  }
+
+  /** Reveals the word one letter at a time (real typewriter), left-anchored. */
+  private drawTypewriter(r: ResolvedWordRender, displayText: string, start: number, end: number, W: number, H: number): string {
+    const chars = [...displayText];
+    const n = chars.length;
+    const interval = Math.min(0.07, Math.max(0.03, ((end - start) * 0.7) / n));
+    // Fixed left edge so letters extend rightward from a stable origin.
+    const fullWidth = r.fontSizePx * 0.6 * n;
+    const left = (W * r.xNorm - fullWidth / 2).toFixed(1);
+    const y = `(h*${r.yNorm.toFixed(4)}-text_h/2)`;
+    const border = r.stroke ? `:borderw=${r.stroke.width}:bordercolor=${colorToFfmpeg(r.stroke.color)}` : '';
+    const shadow = r.shadow
+      ? `:shadowx=${r.shadow.dx}:shadowy=${r.shadow.dy}:shadowcolor=${colorToFfmpeg(r.shadow.color)}@${r.shadow.alpha.toFixed(2)}`
+      : '';
+    const token = fontToken(r.fontFamily);
+    const color = colorToFfmpeg(r.color);
+    const alpha = r.opacity.toFixed(3);
+    const draws: string[] = [];
+    for (let k = 1; k <= n; k += 1) {
+      const tStart = (start + (k - 1) * interval).toFixed(3);
+      const tEnd = (k < n ? start + k * interval : end).toFixed(3);
+      const prefix = escapeFilterValue(chars.slice(0, k).join(''));
+      draws.push(
+        `drawtext=text='${prefix}':${token}:fontcolor=${color}:fontsize=${r.fontSizePx}` +
+        `:x='${left}':y='${y}':alpha='${alpha}'${border}${shadow}:enable='between(t,${tStart},${tEnd})'`,
+      );
+    }
+    return draws.join(',');
   }
 }

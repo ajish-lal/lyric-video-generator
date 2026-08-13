@@ -64,6 +64,25 @@ export interface DynamicWordEffect {
   animation: WordAnimation;
 }
 
+export type MusicVizMode = 'wave' | 'bars' | 'spectrum';
+export type MusicVizPosition = 'top' | 'center' | 'bottom';
+
+export interface MusicVizConfig {
+  enabled: boolean;
+  mode?: MusicVizMode;
+  position?: MusicVizPosition;
+  /** Strip height as a fraction of frame height (0-1). */
+  height?: number;
+  /** Gap from the frame edge as a fraction of frame height (0-1). */
+  margin?: number;
+  /** Colours cycled across the waveform/bars. */
+  colors?: string[];
+  /** Neon glow strength (gblur sigma); 0 disables the glow. */
+  glow?: number;
+  /** Adds a fading mirrored reflection beneath the visualizer. */
+  reflection?: boolean;
+}
+
 export interface RenderConfig {
   width: number;
   height: number;
@@ -79,4 +98,6 @@ export interface RenderConfig {
   effects?: ResolvedEffects;
   /** Resolved background from a customization config. */
   customBackground?: ResolvedBackground;
+  /** Audio-reactive visualizer drawn over the frame (needs an audio track). */
+  musicViz?: MusicVizConfig;
 }

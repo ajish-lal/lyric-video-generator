@@ -1,0 +1,31 @@
+{
+  "title": "My First Song",
+  "theme": "dark",
+  "audio": "input/demo.mp3",
+  "resolution": { "width": 1280, "height": 720, "fps": 24 },
+  "typography": {
+    "font": "Impact",
+    "color": "#f2f4f8",
+    "animation": "fade_up"
+  },
+  "background": { "preset": "industrial" },
+  "musicViz": {
+    "enabled": true,
+    "mode": "bars",
+    "position": "bottom",
+    "colors": ["#eaeaea"],
+    "glow": 4,
+    "height": 0.15,
+    "reflection": true
+  },
+  "sections": [
+    {
+      "type": "verse",
+      "lines": [
+        { "text": "this is my very first line", "start": 0, "end": 4 },
+        { "text": "and here comes the second", "start": 4, "end": 8 },
+        { "text": "the beat keeps rolling on", "start": 8, "end": 12 }
+      ]
+    }
+  ]
+}

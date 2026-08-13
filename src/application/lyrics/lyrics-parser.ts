@@ -4,7 +4,7 @@ import type { TranscriptSegment } from '../../core/interfaces/transcriber.js';
 function styleTranscribedWord(text: string, start: number, end: number) {
   const duration = end - start;
   if (duration >= 0.7) return {
-    text, start, end, fontFamily: 'Georgia', color: '#d8f7ff',
+    text, start, end, fontFamily: 'Baskerville', color: '#d8f7ff',
     animation: { type: 'smog-fade' as const, duration: 0.5, easing: 'easeOut', intensity: 0.7 },
   };
   if (duration <= 0.28) return {
@@ -100,6 +100,18 @@ export function parseLyricsFile(content: string): LyricsDocument {
         lines: [],
       };
       continue;
+    }
+
+    // A lyric line before any [Section] header starts an implicit verse, so a
+    // header-less lyrics file is still parsed instead of being dropped.
+    if (!currentSection) {
+      currentSection = {
+        id: `section-${sections.length + 1}`,
+        type: 'verse',
+        start: 0,
+        end: 0,
+        lines: [],
+      };
     }
 
     const start = lineNumber * 3;

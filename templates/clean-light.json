@@ -1,0 +1,13 @@
+{
+  "name": "clean-light",
+  "description": "Bright, minimal look on white: dark legible type with gentle motion.",
+  "theme": "white",
+  "typography": { "font": "Arial", "color": "#141414" },
+  "sections": {
+    "intro": { "fontSize": 62, "color": "#3a3a3a", "animation": "fade", "background": { "color": "#ffffff" } },
+    "verse": { "font": "Arial", "fontSize": 70, "color": "#141414", "animation": "fade_up", "background": { "color": "#ffffff" } },
+    "chorus": { "font": "Arial Black", "fontSize": 96, "fontWeight": 900, "color": "#141414", "animation": "pop", "background": { "color": "#f4f5f7" } },
+    "bridge": { "fontSize": 74, "color": "#3a3a3a", "animation": "fade", "background": { "color": "#ffffff" } },
+    "outro": { "fontSize": 62, "color": "#3a3a3a", "animation": "fade", "background": { "color": "#ffffff" } }
+  }
+}

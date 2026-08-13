@@ -1,0 +1,30 @@
+{
+  "title": "Music Viz (JSON) Demo",
+  "theme": "dark",
+  "audio": "input/demo.mp3",
+  "resolution": { "width": 1280, "height": 720, "fps": 24 },
+  "typography": {
+    "font": "Impact",
+    "color": "#e9edf2",
+    "animation": "fade_up"
+  },
+  "background": { "preset": "industrial" },
+  "musicViz": {
+    "enabled": true,
+    "mode": "bars",
+    "position": "bottom",
+    "colors": ["#eaeaea"],
+    "glow": 4,
+    "height": 0.15,
+    "reflection": true
+  },
+  "sections": [
+    {
+      "type": "verse",
+      "lines": [
+        { "text": "city lights are calling out my name", "start": 0, "end": 4 },
+        { "text": "everything is never quite the same", "start": 4, "end": 8 }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ describe('createProjectFromLyricsContent', () => {
 
     expect(project.lyrics.sections).toHaveLength(2);
     expect(project.renderConfig.lyricAnimation.type).toBe('word-by-word');
-    expect(project.renderConfig.wordDisplay).toEqual({ mode: 'single-word', hold: 'word-end' });
+    expect(project.renderConfig.wordDisplay).toEqual({ mode: 'single-word', hold: 'next-word' });
     expect(project.scenes.length).toBeGreaterThan(0);
   });
 });

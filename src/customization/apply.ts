@@ -225,6 +225,7 @@ export function applyCustomizationToProject(project: Project, config: ProjectCon
   project.renderConfig.customBackground = background;
   project.renderConfig.effects = resolveEffects(config.effects, background);
   project.renderConfig.customized = true;
+  if (config.musicViz) project.renderConfig.musicViz = config.musicViz;
 
   if (config.resolution) {
     if (config.resolution.width) project.renderConfig.width = config.resolution.width;

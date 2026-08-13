@@ -1,4 +1,5 @@
 import type { AnimationBehavior, ResolvedEffects } from '../../core/models/customization.js';
+import type { MusicVizConfig } from '../../core/models/render.js';
 
 /**
  * Pure FFmpeg filter builders for the customized render path. These functions
@@ -45,35 +46,36 @@ export function animationExpressions(
   const te = end.toFixed(3);
   const baseX = `(w*${xNorm.toFixed(4)}-text_w/2)`;
   const baseY = `(h*${yNorm.toFixed(4)}-text_h/2)`;
-  const dIn = Math.max(0.001, a.inDuration).toFixed(3);
-  const dOut = Math.max(0.08, Math.min(a.inDuration || 0.3, 0.35)).toFixed(3);
-  // Local time since the word appeared, entrance progress (0..1) and an
-  // ease-out cubic so every move decelerates into place instead of stopping
-  // abruptly. `decay` turns any shake into a burst that settles (~0.3s).
+  // Cap the entrance so slow fades still fully appear inside a short slot.
+  const wordDuration = Math.max(0.05, end - start);
+  const effIn = Math.max(0.06, Math.min(a.inDuration || 0.3, wordDuration * 0.5));
+  const dIn = effIn.toFixed(3);
+  const dOut = Math.max(0.08, Math.min(effIn, 0.35)).toFixed(3);
   const tt = `(t-${ts})`;
   const prog = `min(1,${tt}/${dIn})`;
   const easeOut = `(1-pow(1-${prog},3))`;
   const decay = `exp(-7*${tt})`;
 
+  const noFade = a.motion === 'slide-up' || a.motion === 'slide-down';
+
   let x = baseX;
   let y = baseY;
 
   switch (a.motion) {
-    case 'slide-up':
     case 'fade-up':
       y = `${baseY}+${a.translatePx.toFixed(1)}*(1-${easeOut})`;
       break;
+    case 'slide-up':
+      y = `${baseY}+${Math.max(60, a.translatePx).toFixed(1)}*(1-${easeOut})`;
+      break;
     case 'slide-down':
-      y = `${baseY}-${a.translatePx.toFixed(1)}*(1-${easeOut})`;
+      y = `${baseY}-${Math.max(60, a.translatePx).toFixed(1)}*(1-${easeOut})`;
       break;
     case 'pop': {
-      // Drop-in from just above the baseline, ease-out to rest, then a tiny
-      // decaying settle bounce for a premium spring feel.
-      const pop = (a.overshoot * 80).toFixed(1);
-      const settle = (a.overshoot * 80 * 0.16).toFixed(1);
-      y = `${baseY}-${pop}*(1-${easeOut})+${settle}*sin(50.265*${tt})*${decay}`;
-      // Optional decaying shake jab on the hit (driven by shakePx/shakeHz). This
-      // is what gives an "impact" its punch; amount is fully preset-tunable.
+      // drawtext can't scale, so a pop is a pronounced drop-in with a settle bounce.
+      const drop = (a.overshoot * 160 + 48).toFixed(1);
+      const settle = (a.overshoot * 160 * 0.22 + 10).toFixed(1);
+      y = `${baseY}-${drop}*(1-${easeOut})+${settle}*sin(46*${tt})*${decay}`;
       if (a.shakePx > 0 && a.shakeHz > 0) {
         const wx = (2 * Math.PI * a.shakeHz).toFixed(3);
         const wy = (2 * Math.PI * a.shakeHz * 1.3).toFixed(3);
@@ -82,19 +84,29 @@ export function animationExpressions(
       }
       break;
     }
-    case 'shake':
-    case 'glitch': {
+    case 'shake': {
       if (a.shakePx > 0 && a.shakeHz > 0) {
         const wx = (2 * Math.PI * a.shakeHz).toFixed(3);
         const wy = (2 * Math.PI * a.shakeHz * 1.3).toFixed(3);
-        // Phase-locked to word start and enveloped by `decay`: an impact jitter
-        // that bursts then settles rather than buzzing for the whole duration.
         const entrance = a.overshoot > 0 ? `-${(a.overshoot * 70).toFixed(1)}*(1-${easeOut})` : '';
         x = `${baseX}+${a.shakePx.toFixed(1)}*sin(${wx}*${tt})*${decay}`;
         y = `${baseY}+${(a.shakePx * 0.6).toFixed(1)}*cos(${wy}*${tt})*${decay}${entrance}`;
       }
       break;
     }
+    case 'glitch': {
+      // Sustained buzz plus discrete horizontal jumps, distinct from a plain shake.
+      const amp = Math.max(4, a.shakePx).toFixed(1);
+      const wx = (2 * Math.PI * a.shakeHz).toFixed(3);
+      const wy = (2 * Math.PI * a.shakeHz * 1.3).toFixed(3);
+      const jumpAmp = Math.max(8, a.shakePx * 1.8).toFixed(1);
+      const jumpFreq = Math.max(7, Math.min(20, a.shakeHz / 3)).toFixed(2);
+      x = `${baseX}+${amp}*sin(${wx}*${tt})+${jumpAmp}*(mod(floor(${jumpFreq}*${tt}),2)*2-1)`;
+      y = `${baseY}+${(a.shakePx * 0.5).toFixed(1)}*cos(${wy}*${tt})`;
+      break;
+    }
+    case 'typewriter':
+      break;
     default:
       break;
   }
@@ -102,13 +114,15 @@ export function animationExpressions(
   let alpha: string;
   if (a.motion === 'none' && a.inDuration === 0) {
     alpha = opacity.toFixed(3);
+  } else if (noFade) {
+    const outRamp = `clip((${te}-t)/${dOut},0,1)`;
+    alpha = `${opacity.toFixed(3)}*(${outRamp})*(${outRamp})*(3-2*(${outRamp}))`;
   } else {
-    // Smoothstep the in/out ramp so fades ease at both ends (no linear edges).
     const ramp = `clip(min((t-${ts})/${dIn},(${te}-t)/${dOut}),0,1)`;
     alpha = `${opacity.toFixed(3)}*(${ramp})*(${ramp})*(3-2*(${ramp}))`;
   }
   if (a.glitch) {
-    alpha = `${alpha}*(0.82+0.18*abs(sin(47*t)))`;
+    alpha = `${alpha}*(0.55+0.45*abs(sin(47*t)))*(if(gt(sin(13*t),0.92),0.15,1))`;
   }
 
   return { x, y, alpha };
@@ -156,6 +170,7 @@ export function buildGradeChain(
   size: string,
   fps: number,
   totalFrames: number,
+  outLabel = 'outv',
 ): string[] {
   const ca = Math.round(effects.chromaticAberration + effects.glitch * 4);
   const nodes: string[] = [
@@ -188,11 +203,90 @@ export function buildGradeChain(
   if (push > 0) {
     nodes.push(
       `[graded]zoompan=z='min(1.0+${push.toFixed(3)}*on/${totalFrames},${(1 + push).toFixed(3)})'` +
-        `:d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${size}:fps=${fps}[outv]`,
+        `:d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${size}:fps=${fps}[${outLabel}]`,
     );
   } else {
-    nodes.push(`[graded]null[outv]`);
+    nodes.push(`[graded]null[${outLabel}]`);
   }
 
   return nodes;
+}
+
+/**
+ * Builds an audio-reactive visualizer that sits over the finished frame. The
+ * waveform/bars are given a two-pass bloom (tight + wide glow) and, optionally,
+ * a fading mirrored reflection beneath, then screen-blended onto `baseLabel` so
+ * the black background drops out. All blending happens in planar RGB (`gbrp`);
+ * doing it in YUV injects a false magenta cast. The audio input is split so one
+ * copy still feeds the output track, returned as `audioOutLabel`.
+ */
+export function buildMusicVizNodes(input: {
+  audioInputIndex: number;
+  width: number;
+  height: number;
+  fps: number;
+  viz: MusicVizConfig;
+  baseLabel: string;
+  outLabel: string;
+}): { nodes: string[]; audioOutLabel: string } {
+  const { audioInputIndex, width: W, height: H, fps, viz, baseLabel, outLabel } = input;
+  const stripH = Math.max(24, Math.round(H * (viz.height ?? 0.18)));
+  const margin = Math.max(0, Math.round(H * (viz.margin ?? 0.05)));
+  const colors = (viz.colors && viz.colors.length > 0 ? viz.colors : ['#00e5ff', '#ff2fd0'])
+    .map(colorToFfmpeg)
+    .join('|');
+  const glow = Math.max(0, viz.glow ?? 8);
+  const reflect = viz.reflection === true;
+  const reflH = reflect ? Math.round(stripH * 0.55) : 0;
+  const gapH = reflect ? Math.max(2, Math.round(stripH * 0.04)) : 0;
+  const totalH = stripH + gapH + reflH;
+  const yTop = viz.position === 'top'
+    ? margin
+    : viz.position === 'center'
+      ? Math.round((H - totalH) / 2)
+      : H - totalH - margin;
+
+  const nodes: string[] = [`[${audioInputIndex}:a]asplit=2[aout][aviz]`];
+  switch (viz.mode) {
+    case 'bars':
+      nodes.push(`[aviz]showfreqs=s=${W}x${stripH}:mode=bar:ascale=log:colors=${colors}:rate=${fps},format=gbrp[strip]`);
+      break;
+    case 'spectrum':
+      nodes.push(`[aviz]showspectrum=s=${W}x${stripH}:mode=combined:color=intensity:scale=cbrt:slide=scroll:fps=${fps},format=gbrp[strip]`);
+      break;
+    case 'wave':
+    default:
+      nodes.push(`[aviz]showwaves=s=${W}x${stripH}:mode=line:colors=${colors}:rate=${fps}:scale=sqrt,format=gbrp[strip]`);
+      break;
+  }
+
+  // Optional reflection: a vertically-flipped, squashed copy of the strip that
+  // fades out downward (multiplied by a grey→black vertical gradient), stacked
+  // below the strip with a small gap.
+  if (reflect) {
+    nodes.push(`[strip]split[sMain][sRef]`);
+    nodes.push(`[sRef]vflip,scale=${W}:${reflH},format=gbrp[sRefS]`);
+    nodes.push(`gradients=s=${W}x${reflH}:c0=0x707070:c1=0x000000:x0=0:y0=0:x1=0:y1=${reflH}:n=2:speed=0,format=gbrp[refGrad]`);
+    nodes.push(`[sRefS][refGrad]blend=all_mode=multiply,format=gbrp[sRefF]`);
+    nodes.push(`color=c=black:s=${W}x${gapH}:r=${fps},format=gbrp[refGap]`);
+    nodes.push(`[sMain][refGap][sRefF]vstack=inputs=3,format=gbrp[stripFull]`);
+  } else {
+    nodes.push(`[strip]null[stripFull]`);
+  }
+
+  nodes.push(`[stripFull]pad=${W}:${H}:0:${yTop}:color=black,format=gbrp[vpad]`);
+  if (glow > 0) {
+    // Two-pass bloom: a tight core glow and a wide soft halo, screen-stacked.
+    nodes.push(`[vpad]split=3[vp0][vp1][vp2]`);
+    nodes.push(`[vp1]gblur=sigma=${(glow * 0.6).toFixed(2)},format=gbrp[vglowa]`);
+    nodes.push(`[vp2]gblur=sigma=${(glow * 1.8).toFixed(2)},format=gbrp[vglowb]`);
+    nodes.push(`[vp0][vglowa]blend=all_mode=screen,format=gbrp[vbloom0]`);
+    nodes.push(`[vbloom0][vglowb]blend=all_mode=screen,format=gbrp[vizfull]`);
+  } else {
+    nodes.push(`[vpad]null[vizfull]`);
+  }
+  nodes.push(`[${baseLabel}]format=gbrp[vbase]`);
+  nodes.push(`[vbase][vizfull]blend=all_mode=screen,format=yuv420p[${outLabel}]`);
+
+  return { nodes, audioOutLabel: 'aout' };
 }

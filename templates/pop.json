@@ -1,0 +1,13 @@
+{
+  "name": "pop",
+  "description": "Bright energetic pop: clean sans type, poppy chorus, vibrant grade.",
+  "theme": "dark",
+  "effects": { "saturation": 0.9, "bloom": 0.45, "temperature": 0.15, "vignette": 0.45 },
+  "sections": {
+    "intro": { "font": "Arial", "fontSize": 66, "color": "#e9edf2", "animation": "fade", "background": "industrial" },
+    "verse": { "font": "Arial", "fontSize": 74, "color": "#ffffff", "animation": "slide_up", "background": "industrial" },
+    "chorus": { "font": "Arial Black", "fontSize": 102, "fontWeight": 900, "color": "#ff5ea8", "animation": "pop", "background": "red_room" },
+    "bridge": { "fontSize": 78, "color": "#8fd6ff", "animation": "fade_up", "background": "dark_grain" },
+    "outro": { "font": "Arial", "fontSize": 66, "color": "#e9edf2", "animation": "fade", "background": "industrial" }
+  }
+}
