@@ -15,7 +15,9 @@ Headings go in `[...]`. Recognized types (anything else → `unknown`, which use
 |---|---|
 | `[Intro]` | `intro` |
 | `[Verse]`, `[Verse 1]` | `verse` |
-| `[Chorus]`, `[Pre-Chorus]` | `chorus` |
+| `[Rap]` | `rap` |
+| `[Pre-Chorus]` | `pre-chorus` |
+| `[Chorus]` | `chorus` |
 | `[Bridge]` | `bridge` |
 | `[Breakdown]` | `breakdown` |
 | `[Outro]` | `outro` |

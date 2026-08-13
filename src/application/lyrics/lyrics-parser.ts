@@ -16,9 +16,12 @@ function styleTranscribedWord(text: string, start: number, end: number) {
 
 function toSectionType(value: string): LyricSection['type'] {
   const normalized = value.trim().toLowerCase();
+  if (normalized.includes('pre-chorus') || normalized.includes('prechorus') || normalized.includes('pre chorus')) return 'pre-chorus';
   if (normalized.includes('chorus')) return 'chorus';
+  if (normalized.includes('rap')) return 'rap';
   if (normalized.includes('verse')) return 'verse';
   if (normalized.includes('bridge')) return 'bridge';
+  if (normalized.includes('breakdown')) return 'breakdown';
   if (normalized.includes('intro')) return 'intro';
   if (normalized.includes('outro')) return 'outro';
   return 'unknown';
@@ -27,7 +30,7 @@ function toSectionType(value: string): LyricSection['type'] {
 function isSectionHeading(line: string): boolean {
   const normalized = line.trim().toLowerCase();
   return Boolean(
-    normalized.match(/^(verse|chorus|pre-chorus|bridge|breakdown|intro|outro)(\s+\d+)?$/) ||
+    normalized.match(/^(verse|pre-chorus|chorus|rap|bridge|breakdown|intro|outro)(\s+\d+)?$/) ||
     normalized.match(/^\[(.+)\]$/),
   );
 }

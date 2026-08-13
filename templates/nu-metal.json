@@ -5,6 +5,8 @@
   "sections": {
     "intro": { "fontSize": 130, "color": "#aab4c2", "animation": "fade", "background": "dark_grain" },
     "verse": { "preset": "nu_metal_verse" },
+    "pre-chorus": { "preset": "pre_chorus" },
+    "rap": { "preset": "rap_section" },
     "chorus": { "preset": "heavy_chorus" },
     "bridge": { "preset": "dark_bridge" },
     "breakdown": { "preset": "breakdown" },

@@ -37,7 +37,9 @@ function sectionHeading(line: string): string | undefined {
 /** Normalize a heading label to a known section type (else 'unknown'). */
 function toSectionType(label: string): string {
   const v = label.trim().toLowerCase();
+  if (v.includes('pre-chorus') || v.includes('prechorus') || v.includes('pre chorus')) return 'pre-chorus';
   if (v.includes('chorus')) return 'chorus';
+  if (v.includes('rap')) return 'rap';
   if (v.includes('verse')) return 'verse';
   if (v.includes('bridge')) return 'bridge';
   if (v.includes('breakdown')) return 'breakdown';

@@ -3,7 +3,9 @@ import type { ResolvedWordRender } from './customization.js';
 
 export type SectionType =
   | 'chorus'
+  | 'pre-chorus'
   | 'verse'
+  | 'rap'
   | 'bridge'
   | 'breakdown'
   | 'intro'

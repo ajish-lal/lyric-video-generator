@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
-import { dirname, extname, resolve } from 'node:path';
+import { dirname, extname, join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import ffmpegStaticPath from 'ffmpeg-static';
 import type { Renderer, RenderResult, RenderOptions } from '../../core/interfaces/renderer.js';
 import type { Project, Word } from '../../core/models/project.js';
@@ -180,6 +181,29 @@ function run(binary: string, args: string[]): Promise<void> {
       else reject(new Error(`FFmpeg failed (${code ?? 'unknown error'}): ${stderr.slice(-1200)}`));
     });
   });
+}
+
+/**
+ * Runs FFmpeg with the filtergraph read from a temp file instead of inline. The
+ * per-word graph can be tens of thousands of chars, which overflows the OS
+ * command-line limit (Windows throws `spawn ENAMETOOLONG`). The `-/filter_complex
+ * <file>` syntax (FFmpeg 5.1+) reads the option value from a file, keeping the
+ * argv small on every platform.
+ */
+async function runWithFilterComplex(
+  binary: string,
+  inputArgs: string[],
+  complex: string,
+  tailArgs: string[],
+): Promise<void> {
+  const directory = mkdtempSync(join(tmpdir(), 'lyric-video-filter-'));
+  const scriptPath = join(directory, 'filtergraph.txt');
+  writeFileSync(scriptPath, complex);
+  try {
+    await run(binary, ['-y', ...inputArgs, '-/filter_complex', scriptPath, ...tailArgs]);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 }
 
 function readMediaDuration(binary: string, mediaPath: string): Promise<number | undefined> {
@@ -363,15 +387,12 @@ export class LyricVideoRenderer implements Renderer {
       audioMap = ['-map', `[${vizNodes.audioOutLabel}]`];
     }
     const complex = complexParts.join(';');
-    const args = [
-      '-y', ...inputArgs,
-      '-filter_complex', complex,
+    await runWithFilterComplex(ffmpegPath, inputArgs, complex, [
       '-map', '[outv]',
       ...(audioIndex !== undefined ? [...audioMap, '-c:a', 'aac', '-b:a', '192k'] : []),
       '-t', String(duration),
       ...videoEncoderArgs(), outputPath,
-    ];
-    await run(ffmpegPath, args);
+    ]);
 
     if (!existsSync(outputPath)) throw new Error('FFmpeg reported success but no output file was created.');
     // Write a copy of the project with applied casing so metadata reflects the rendered text
@@ -505,15 +526,12 @@ export class LyricVideoRenderer implements Renderer {
     }
 
     const complex = nodes.join(';');
-    const args = [
-      '-y', ...inputArgs,
-      '-filter_complex', complex,
+    await runWithFilterComplex(ffmpegPath, inputArgs, complex, [
       '-map', '[outv]',
       ...(audioIndex !== undefined ? [...audioMap, '-c:a', 'aac', '-b:a', '192k'] : []),
       '-t', String(duration),
       ...videoEncoderArgs(), outputPath,
-    ];
-    await run(ffmpegPath, args);
+    ]);
     if (!existsSync(outputPath)) throw new Error('FFmpeg reported success but no output file was created.');
 
     const projectForOutput: Project = JSON.parse(JSON.stringify(project));
