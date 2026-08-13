@@ -6,6 +6,11 @@ export interface RenderResult {
   duration: number;
 }
 
+export interface RenderOptions {
+  /** Cap the rendered duration (used by preview). */
+  maxDuration?: number;
+}
+
 export interface Renderer {
-  render(project: Project, outputPath?: string): Promise<RenderResult>;
+  render(project: Project, outputPath?: string, options?: RenderOptions): Promise<RenderResult>;
 }

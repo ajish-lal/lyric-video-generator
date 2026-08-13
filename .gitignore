@@ -14,7 +14,7 @@ package-lock.json
 *.mp3
 output/**/*.jsonnode_modules/
 .venv/
-models/
+/models/
 dist/
 dist-ui/
 output/*

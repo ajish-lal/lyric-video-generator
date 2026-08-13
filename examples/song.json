@@ -1,0 +1,50 @@
+{
+  "title": "Nu-Metal Demo",
+  "theme": "dark",
+  "resolution": { "width": 1920, "height": 1080, "fps": 30 },
+  "typography": {
+    "font": "Impact",
+    "color": "#e9edf2",
+    "animation": "fade_up"
+  },
+  "background": { "preset": "industrial" },
+  "effects": {
+    "bloom": 0.4,
+    "saturation": 0.55,
+    "contrast": 1.18,
+    "vignette": 0.72,
+    "pushIn": 0.06
+  },
+  "wordStyles": {
+    "BREAK": "shout",
+    "never": "whisper"
+  },
+  "sections": [
+    {
+      "type": "verse",
+      "style": { "preset": "nu_metal_verse" },
+      "lines": [
+        { "text": "walls are closing in", "start": 0, "end": 3 },
+        { "text": "i can never breathe again", "start": 3, "end": 6 }
+      ]
+    },
+    {
+      "type": "chorus",
+      "style": { "preset": "heavy_chorus" },
+      "lines": [
+        {
+          "text": "BREAK it all down",
+          "start": 6,
+          "end": 9,
+          "words": [
+            { "text": "BREAK", "style": { "emphasis": "shout", "color": "#ff304f" } },
+            { "text": "it" },
+            { "text": "all" },
+            { "text": "down", "style": { "emphasis": "strong" } }
+          ]
+        },
+        { "text": "nothing left to lose", "start": 9, "end": 12 }
+      ]
+    }
+  ]
+}

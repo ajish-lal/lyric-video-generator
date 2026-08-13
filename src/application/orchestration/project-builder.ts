@@ -1,10 +1,10 @@
 import type { Project, Scene } from '../../core/models/project.js';
 import type { ScenePlan } from '../../core/interfaces/scene-planner.js';
 import type { LyricsDocument } from '../../core/models/project.js';
-import type { RenderConfig } from '../../core/models/render.js';
+import type { BackgroundTheme, RenderConfig } from '../../core/models/render.js';
 
 export class ProjectBuilder {
-  build(input: { id: string; title: string; audioPath: string; lyrics: LyricsDocument; scenes: ScenePlan['scenes']; renderConfig?: RenderConfig; }): Project {
+  build(input: { id: string; title: string; audioPath: string; lyrics: LyricsDocument; scenes: ScenePlan['scenes']; renderConfig?: RenderConfig; theme?: BackgroundTheme; }): Project {
     return {
       id: input.id,
       title: input.title,
@@ -13,31 +13,46 @@ export class ProjectBuilder {
       scenes: input.scenes.map((scene) => ({
         ...scene,
       })) as Scene[],
-      renderConfig: input.renderConfig ?? this.defaultRenderConfig(),
+      renderConfig: input.renderConfig ?? this.defaultRenderConfig(input.theme ?? 'dark'),
     };
   }
 
-  private defaultRenderConfig(): RenderConfig {
+  private defaultRenderConfig(theme: BackgroundTheme = 'dark'): RenderConfig {
+    const light = theme === 'white';
+    // On a light surface the letters must be dark to stay legible; otherwise white.
+    const primaryColor = light ? '#141414' : '#ffffff';
+    const background = light
+      ? {
+          palette: ['0xffffff', '0xf4f5f7', '0xffffff', '0xeef0f4'],
+          gradientType: 'radial' as const,
+          motionSpeed: 0.0016,
+          grain: 2,
+          vignette: 0.14,
+          showFrame: false,
+        }
+      : {
+          // Cold, near-neutral charcoal (no purple/blue tint) for a steely
+          // nu-metal grade; the glow/grade adds the mood, not the base colour.
+          palette: ['0x050506', '0x0b0c10', '0x121419', '0x060607'],
+          gradientType: 'radial' as const,
+          motionSpeed: 0.0022,
+          grain: 4,
+          vignette: 0.72,
+          showFrame: false,
+        };
     return {
       width: 1920,
       height: 1080,
       fps: 30,
       format: 'mp4',
       style: {
-        theme: 'cinematic-dark',
-        fontFamily: 'Arial',
-        textCase: 'original',
-        primaryColor: '#ffffff',
-        accentColor: '#7cff4f',
+        theme: light ? 'clean-light' : 'cinematic-dark',
+        fontFamily: 'Impact',
+        textCase: 'upper',
+        primaryColor,
+        accentColor: '#ff4655',
         lyricPosition: 'center',
-        background: {
-          palette: ['0x060816', '0x172554', '0x3B0764', '0x0F766E'],
-          gradientType: 'radial',
-          motionSpeed: 0.004,
-          grain: 3,
-          vignette: 0.55,
-          showFrame: true,
-        },
+        background,
       },
       lyricAnimation: {
         type: 'word-by-word',

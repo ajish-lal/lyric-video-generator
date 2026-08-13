@@ -1,14 +1,76 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { dirname, extname, resolve } from 'node:path';
-import ffmpegPath from 'ffmpeg-static';
-import type { Renderer, RenderResult } from '../../core/interfaces/renderer.js';
-import type { Project } from '../../core/models/project.js';
+import ffmpegStaticPath from 'ffmpeg-static';
+import type { Renderer, RenderResult, RenderOptions } from '../../core/interfaces/renderer.js';
+import type { Project, Word } from '../../core/models/project.js';
+import type { ResolvedWordRender } from '../../core/models/customization.js';
+import { DEFAULT_EFFECTS } from '../../customization/apply.js';
+import { buildGradeChain, buildWordDrawText, colorToFfmpeg } from './text-filter.js';
 
 const DEFAULT_OUTPUT = 'output/lyric-video.mp4';
 
+/**
+ * Resolves the FFmpeg binary to use. The bundled `ffmpeg-static` build does not
+ * include the `drawtext` filter on every platform, so prefer an explicit
+ * `FFMPEG_PATH` override, then a known full Homebrew build, before falling back
+ * to the bundled binary.
+ */
+function resolveFfmpegPath(): string | null {
+  const override = process.env.FFMPEG_PATH?.trim();
+  if (override) return override;
+  const fullBuilds = [
+    '/usr/local/opt/ffmpeg-full/bin/ffmpeg',
+    '/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg',
+  ];
+  const fullBuild = fullBuilds.find((candidate) => existsSync(candidate));
+  if (fullBuild) return fullBuild;
+  return ffmpegStaticPath;
+}
+
 function escapeFilterValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/:/g, '\\:').replace(/'/g, "\\'").replace(/,/g, '\\,');
+}
+
+/** Known heavy/display font files by family name, used to drive the bold title look. */
+const FONT_FILE_CANDIDATES: Record<string, string[]> = {
+  impact: ['/System/Library/Fonts/Supplemental/Impact.ttf'],
+  'arial black': ['/System/Library/Fonts/Supplemental/Arial Black.ttf'],
+  'din condensed bold': ['/System/Library/Fonts/Supplemental/DIN Condensed Bold.ttf'],
+  georgia: ['/System/Library/Fonts/Supplemental/Georgia.ttf'],
+  arial: ['/System/Library/Fonts/Supplemental/Arial.ttf'],
+};
+
+/** Resolves a concrete font file for a family so drawtext works without fontconfig. */
+function resolveFontFile(family: string | undefined): string | undefined {
+  if (!family) return undefined;
+  const overrideDir = process.env.FONT_DIR?.trim();
+  const key = family.trim().toLowerCase();
+  const candidates = [
+    ...(overrideDir ? [`${overrideDir}/${family}.ttf`, `${overrideDir}/${family}.otf`] : []),
+    ...(FONT_FILE_CANDIDATES[key] ?? []),
+  ];
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
+/** Builds the drawtext font token, preferring an explicit fontfile over a fontconfig name. */
+function fontToken(family: string | undefined): string {
+  const file = resolveFontFile(family);
+  return file ? `fontfile='${escapeFilterValue(file)}'` : `font='${escapeFilterValue(family ?? 'sans')}'`;
+}
+
+/**
+ * Resolves a grunge/scratch texture image used to carve the letters. Drop any
+ * grayscale texture (white = keep, black = carve) at `assets/grunge-texture.png`
+ * or point `TEXTURE_FILE` at one to swap the look without touching code.
+ */
+function resolveTextureFile(): string | undefined {
+  const override = process.env.TEXTURE_FILE?.trim();
+  const candidates = [
+    ...(override ? [override] : []),
+    resolve('assets/grunge-texture.png'),
+  ];
+  return candidates.find((candidate) => existsSync(candidate));
 }
 
 function asFfmpegColor(value: string): string {
@@ -48,8 +110,9 @@ function readMediaDuration(binary: string, mediaPath: string): Promise<number | 
 
 /** Renders a self-contained H.264 MP4; project metadata is written beside it as JSON. */
 export class LyricVideoRenderer implements Renderer {
-  async render(project: Project, requestedOutputPath = DEFAULT_OUTPUT): Promise<RenderResult> {
-    if (!ffmpegPath) throw new Error('FFmpeg binary is unavailable. Reinstall dependencies with npm install.');
+  async render(project: Project, requestedOutputPath = DEFAULT_OUTPUT, options: RenderOptions = {}): Promise<RenderResult> {
+    const ffmpegPath = resolveFfmpegPath();
+    if (!ffmpegPath) throw new Error('FFmpeg binary is unavailable. Reinstall dependencies with npm install, or set FFMPEG_PATH to a full FFmpeg build.');
     const outputPath = resolve(requestedOutputPath);
     if (extname(outputPath).toLowerCase() !== '.mp4') throw new Error('Output must use the .mp4 extension.');
     mkdirSync(dirname(outputPath), { recursive: true });
@@ -63,7 +126,8 @@ export class LyricVideoRenderer implements Renderer {
     const allLines = project.lyrics.sections.flatMap((section) => section.lines);
     const hasAudio = Boolean(project.audioPath && existsSync(project.audioPath));
     const audioDuration = hasAudio ? await readMediaDuration(ffmpegPath, project.audioPath) : undefined;
-    const duration = Math.max(1, allLines.at(-1)?.end ?? 0, audioDuration ?? 0);
+    const rawDuration = Math.max(1, allLines.at(-1)?.end ?? 0, audioDuration ?? 0);
+    const duration = options.maxDuration ? Math.min(rawDuration, options.maxDuration) : rawDuration;
     const y = config.style.lyricPosition === 'top' ? 'h*0.20' : config.style.lyricPosition === 'bottom' ? 'h*0.78' : 'h/2';
     const applyCase = (input: string) => {
       const mode = config.style?.textCase ?? 'original';
@@ -74,22 +138,35 @@ export class LyricVideoRenderer implements Renderer {
       return input;
     };
 
+    // Customized path: draw each word directly with its own colour/size/effects.
+    // Kept entirely separate so the default look is byte-for-byte unchanged.
+    if (config.customized) {
+      return this.renderCustomized({ ffmpegPath, outputPath, project, duration, hasAudio, applyCase });
+    }
+
     const createTextFilter = (text: string, start: number, end: number, fade = false, effect?: Project['lyrics']['sections'][number]['lines'][number]['words'][number]) => {
-      const safeText = escapeFilterValue(applyCase(text));
+      const cased = applyCase(text);
+      const safeText = escapeFilterValue(cased);
       const formattedStart = start.toFixed(3);
       const formattedEnd = end.toFixed(3);
       const isSmog = effect?.animation?.type === 'smog-fade';
       const isSlash = effect?.animation?.type === 'slash-vibrate';
+      // Auto-size so a word roughly fills the frame width without clipping (Impact-like glyph aspect ~0.6).
+      const glyphs = Math.max(1, cased.replace(/\s+/g, ' ').length);
+      const maxSize = Math.round(config.height / 3.6);
+      const minSize = Math.round(config.height / 14);
+      const fitted = Math.round((config.width * 0.86) / (glyphs * 0.62));
+      const fontSize = Math.max(minSize, Math.min(maxSize, fitted));
       const alpha = fade
         ? `if(lt(t,${formattedStart}+0.35),(t-${formattedStart})/0.35,if(gt(t,${formattedEnd}-0.35),(${formattedEnd}-t)/0.35,1))`
         : isSmog
           ? `min(1,(t-${formattedStart})/0.18)`
-        : '1';
+        : `min(1,(t-${formattedStart})/0.12)`;
       const x = isSlash ? `(w-text_w)/2+${Math.round((effect.animation?.intensity ?? 0.8) * 12)}*sin(95*t)` : '(w-text_w)/2';
-      const wordY = isSmog ? `${y}+${Math.round((effect?.animation?.intensity ?? 0.7) * 18)}*sin(3*t)` : y;
-      const font = escapeFilterValue(effect?.fontFamily ?? config.style.fontFamily);
-      const color = asFfmpegColor(effect?.color ?? config.style.primaryColor);
-      return `drawtext=text='${safeText}':font='${font}':fontcolor=${color}:fontsize=h/9:x=${x}:y=${wordY}:box=1:boxcolor=black@0.24:boxborderw=32:borderw=2:bordercolor=white@0.12:shadowx=0:shadowy=12:shadowcolor=black@0.72:alpha='${alpha}':enable='between(t,${formattedStart},${formattedEnd})'`;
+      const wordY = isSmog ? `${y}-text_h/2+${Math.round((effect?.animation?.intensity ?? 0.7) * 18)}*sin(3*t)` : `${y}-text_h/2`;
+      const font = fontToken(effect?.fontFamily ?? config.style.fontFamily);
+      // White glyphs only: the drop shadow and carved grunge texture are composited later.
+      return `drawtext=text='${safeText}':${font}:fontcolor=white:fontsize=${fontSize}:x=${x}:y=${wordY}:alpha='${alpha}':enable='between(t,${formattedStart},${formattedEnd})'`;
     };
     const filters = allLines.flatMap((line) => {
       if (config.lyricAnimation.type === 'word-by-word' && line.words.length > 0) {
@@ -117,8 +194,8 @@ export class LyricVideoRenderer implements Renderer {
       const alpha = config.lyricAnimation.type === 'fade'
         ? `if(lt(t,${start}+0.35),(t-${start})/0.35,if(gt(t,${end}-0.35),(${end}-t)/0.35,1))`
         : '1';
-      const font = escapeFilterValue(config.style.fontFamily);
-      return `drawtext=text='${safeText}':font='${font}':fontcolor=${asFfmpegColor(config.style.primaryColor)}:fontsize=h/15:x=(w-text_w)/2:y=${y}:borderw=3:bordercolor=black@0.65:alpha='${alpha}':enable='between(t,${start},${end})'`;
+      const font = fontToken(config.style.fontFamily);
+      return `drawtext=text='${safeText}':${font}:fontcolor=white:fontsize=h/12:x=(w-text_w)/2:y=${y}-text_h/2:alpha='${alpha}':enable='between(t,${start},${end})'`;
     });
 
     const palette = background.palette.slice(0, 8).map(asFfmpegColor);
@@ -128,17 +205,73 @@ export class LyricVideoRenderer implements Renderer {
       ...palette.map((color, index) => `c${index}=${color}`),
       `n=${palette.length}:t=${gradientType(background.gradientType)}:speed=${background.motionSpeed}:seed=104729`,
     ].join(':');
+    const W = config.width;
+    const H = config.height;
+    const fps = config.fps;
+    const size = `${W}x${H}`;
+    const vignetteAngle = Math.max(1, Math.round(10 - background.vignette * 8));
     const backgroundFilters = [
       `noise=alls=${Math.max(0, Math.round(background.grain))}:allf=t+u`,
-      `vignette=PI/${Math.max(1, Math.round(10 - background.vignette * 8))}`,
       ...(background.showFrame ? ['drawbox=x=54:y=54:w=iw-108:h=ih-108:color=white@0.10:t=2'] : []),
     ];
+    // Amount of grit for the generated fallback texture; scales with grain.
+    const grungeAmount = Math.min(90, Math.max(40, Math.round(background.grain * 12)));
+    // Low-res, vertically-stretched STATIC noise reads as chunky scratches after
+    // upscaling. `allf=u` (no `t`) keeps it fixed so the scratches don't crawl.
+    const grungeW = Math.max(2, Math.round(W / 2));
+    const grungeH = Math.max(2, Math.round(H / 14));
+    // Prefer a real grunge/scratch image (assets/grunge-texture.png or
+    // $TEXTURE_FILE); it is static and trivial to swap. Otherwise generate noise.
+    const textureFile = resolveTextureFile();
+    // Assemble inputs, tracking stream indices as optional inputs are added.
+    const inputArgs: string[] = ['-f', 'lavfi', '-i', gradientInput];
+    let nextInput = 1;
+    let textureIndex: number | undefined;
+    if (textureFile) {
+      inputArgs.push('-loop', '1', '-i', textureFile);
+      textureIndex = nextInput++;
+    }
+    let audioIndex: number | undefined;
+    if (hasAudio) {
+      inputArgs.push('-stream_loop', '-1', '-i', project.audioPath);
+      audioIndex = nextInput++;
+    }
+    const grungeNode = textureIndex !== undefined
+      ? `[${textureIndex}:v]scale=${W}:${H},fps=${fps},format=gray,eq=contrast=1.25:brightness=0.04[grunge]`
+      : `color=c=gray:s=${grungeW}x${grungeH}:r=${fps},noise=alls=${grungeAmount}:allf=u:all_seed=8675309,scale=${W}:${H}:flags=bilinear,eq=contrast=9:brightness=0.30,gblur=sigma=0.6,format=gray[grunge]`;
+    // Final letter colour (white on dark surfaces, dark on light surfaces). The
+    // drawtext mask is always white; this fill colour is what the viewer sees.
+    const fillColor = asFfmpegColor(config.style.primaryColor).replace(/^#/, '0x');
+    // Composite pipeline. Texture only lightly distresses the glyphs (mixed back
+    // with the clean mask) so a busy texture reads as wear, not static. The look
+    // is carried by the grade: bloom glow, cold desaturation, vignette, a touch
+    // of chromatic aberration, and a slow push-in for energy.
+    const totalFrames = Math.max(1, Math.round(duration * fps));
+    const complex = [
+      `[0:v]${backgroundFilters.join(',')}[bg]`,
+      `color=c=black:s=${size}:r=${fps},${[...filters, 'format=gray'].join(',')},split=3[txtA][txtB][txtC]`,
+      grungeNode,
+      `[txtA][grunge]blend=all_mode=multiply[eroded0]`,
+      `[eroded0][txtC]blend=all_mode=normal:all_opacity=0.4[eroded]`,
+      `[txtB]boxblur=12:1,format=gray[shadowmask]`,
+      `color=c=${fillColor}:s=${size}:r=${fps},format=rgba[fill]`,
+      `[fill][eroded]alphamerge[textrgba]`,
+      `color=c=black:s=${size}:r=${fps},format=rgba[shadowfill]`,
+      `[shadowfill][shadowmask]alphamerge[shadowrgba]`,
+      `[bg][shadowrgba]overlay=x=6:y=14:shortest=1[bgs]`,
+      `[bgs][textrgba]overlay=shortest=1[comp]`,
+      `[comp]split[cbase][cbloom]`,
+      `[cbloom]hue=s=0,curves=m='0/0 0.62/0 0.8/0.45 1/1',gblur=sigma=16[bloom]`,
+      `[cbase][bloom]blend=all_mode=screen:all_opacity=0.38[lit]`,
+      `[lit]colorbalance=rs=-0.03:bs=0.05:bm=0.02,eq=contrast=1.18:saturation=0.55:gamma=0.95,vignette=PI/${vignetteAngle},rgbashift=rh=2:bh=-2[graded]`,
+      `[graded]zoompan=z='min(1.0+0.06*on/${totalFrames},1.06)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${size}:fps=${fps}[outv]`,
+    ].join(';');
     const args = [
-      '-y', '-f', 'lavfi', '-i', gradientInput,
-      ...(hasAudio ? ['-stream_loop', '-1', '-i', project.audioPath] : []),
-      '-vf', [...backgroundFilters, ...filters].join(','),
-      '-t', String(duration), '-map', '0:v:0',
-      ...(hasAudio ? ['-map', '1:a:0', '-c:a', 'aac', '-b:a', '192k'] : []),
+      '-y', ...inputArgs,
+      '-filter_complex', complex,
+      '-map', '[outv]',
+      ...(audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`, '-c:a', 'aac', '-b:a', '192k'] : []),
+      '-t', String(duration),
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outputPath,
     ];
     await run(ffmpegPath, args);
@@ -156,5 +289,164 @@ export class LyricVideoRenderer implements Renderer {
     }
     writeFileSync(`${outputPath}.json`, JSON.stringify({ project: projectForOutput, outputPath, duration }, null, 2));
     return { outputPath, format: 'mp4', duration };
+  }
+
+  /**
+   * Customized render path. Each word is drawn directly with its own resolved
+   * colour, size, position, stroke, shadow and animation, so per-word styling is
+   * preserved. Texture is applied as a light global overlay and the cinematic
+   * grade is driven by the resolved effects.
+   */
+  private async renderCustomized(params: {
+    ffmpegPath: string;
+    outputPath: string;
+    project: Project;
+    duration: number;
+    hasAudio: boolean;
+    applyCase: (input: string) => string;
+  }): Promise<RenderResult> {
+    const { ffmpegPath, outputPath, project, duration, hasAudio, applyCase } = params;
+    const config = project.renderConfig;
+    const W = config.width;
+    const H = config.height;
+    const fps = config.fps;
+    const size = `${W}x${H}`;
+    const totalFrames = Math.max(1, Math.round(duration * fps));
+    const bg = config.customBackground ?? {
+      kind: 'gradient' as const, color: '#000000', gradient: config.style.background.palette,
+      blur: 0, vignette: config.style.background.vignette, grain: 0.2, overlayOpacity: 0,
+    };
+    const effects = config.effects ?? DEFAULT_EFFECTS;
+
+    // --- inputs (index-tracked) ---
+    const inputArgs: string[] = [];
+    let nextInput = 0;
+    if (bg.kind === 'image' && bg.imagePath) {
+      inputArgs.push('-loop', '1', '-i', bg.imagePath);
+    } else if (bg.kind === 'video' && bg.videoPath) {
+      inputArgs.push('-stream_loop', '-1', '-i', bg.videoPath);
+    } else if (bg.kind === 'solid') {
+      inputArgs.push('-f', 'lavfi', '-i', `color=c=${colorToFfmpeg(bg.color)}:s=${size}:r=${fps}`);
+    } else {
+      const palette = (bg.gradient && bg.gradient.length > 0 ? bg.gradient : [bg.color]).slice(0, 8).map(colorToFfmpeg);
+      while (palette.length < 2) palette.push(colorToFfmpeg(bg.color));
+      const gradientInput = [
+        `gradients=s=${size}:r=${fps}`,
+        ...palette.map((color, index) => `c${index}=${color}`),
+        `n=${palette.length}:t=${gradientType(config.style.background.gradientType)}:speed=${config.style.background.motionSpeed}:seed=104729`,
+      ].join(':');
+      inputArgs.push('-f', 'lavfi', '-i', gradientInput);
+    }
+    const bgIndex = nextInput++;
+
+    const textureFile = resolveTextureFile();
+    let textureIndex: number | undefined;
+    if (textureFile) {
+      inputArgs.push('-loop', '1', '-i', textureFile);
+      textureIndex = nextInput++;
+    }
+    let audioIndex: number | undefined;
+    if (hasAudio) {
+      inputArgs.push('-stream_loop', '-1', '-i', project.audioPath);
+      audioIndex = nextInput++;
+    }
+
+    // --- background node ---
+    // Grain is intentionally NOT applied here; it is added once over the whole
+    // graded frame in buildGradeChain so it sits on the text too (a unified
+    // film-grain layer rather than grain only behind the letters).
+    const bgParts = [`scale=${W}:${H}`, 'setsar=1'];
+    if (bg.blur > 0) bgParts.push(`gblur=sigma=${(bg.blur * 10).toFixed(2)}`);
+    if (bg.overlayColor && bg.overlayOpacity > 0) {
+      bgParts.push(`drawbox=x=0:y=0:w=iw:h=ih:color=${colorToFfmpeg(bg.overlayColor)}@${bg.overlayOpacity.toFixed(3)}:t=fill`);
+    }
+    bgParts.push('format=yuv420p');
+    const nodes: string[] = [`[${bgIndex}:v]${bgParts.join(',')}[bg]`];
+
+    // --- per-word drawtext ---
+    const wordDisplay = config.wordDisplay ?? { mode: 'single-word' as const, hold: 'word-end' as const };
+    const allLines = project.lyrics.sections.flatMap((section) => section.lines);
+    const fallbackRender = (): ResolvedWordRender => ({
+      fontFamily: config.style.fontFamily, fontSizePx: Math.round(H / 11), color: config.style.primaryColor,
+      opacity: 1, xNorm: 0.5, yNorm: 0.5,
+      animation: { motion: 'fade', inDuration: 0.3, translatePx: 0, overshoot: 0, shakePx: 0, shakeHz: 0, glitch: false, opacityMul: 1 },
+    });
+    const draws: string[] = [];
+    for (const line of allLines) {
+      if (config.lyricAnimation.type === 'word-by-word' && line.words.length > 0) {
+        line.words.forEach((word, index) => {
+          const end = wordDisplay.hold === 'next-word' ? line.words[index + 1]?.start ?? line.end : word.end;
+          const rawText = wordDisplay.mode === 'single-word'
+            ? word.text
+            : line.words.slice(0, index + 1).map((item) => item.text).join(' ');
+          draws.push(this.drawWord(word, applyCase(rawText), word.start, Math.max(word.start + 0.01, end), W, H, fallbackRender));
+        });
+      } else {
+        const synthetic: Word = { text: line.text, start: line.start, end: line.end, render: fallbackRender() };
+        draws.push(this.drawWord(synthetic, applyCase(line.text), line.start, Math.max(line.start + 0.01, line.end), W, H, fallbackRender));
+      }
+    }
+
+    let preGrade = 'bg';
+    if (draws.length > 0) {
+      nodes.push(`[bg]${draws.join(',')}[drawn]`);
+      preGrade = 'drawn';
+    }
+    if (textureIndex !== undefined) {
+      nodes.push(`[${textureIndex}:v]scale=${W}:${H},format=gray,eq=contrast=1.2:brightness=0.05,format=yuv420p[tex]`);
+      nodes.push(`[${preGrade}][tex]blend=all_mode=softlight:all_opacity=0.12[textured]`);
+      preGrade = 'textured';
+    }
+    nodes.push(...buildGradeChain(effects, preGrade, size, fps, totalFrames));
+
+    const complex = nodes.join(';');
+    const args = [
+      '-y', ...inputArgs,
+      '-filter_complex', complex,
+      '-map', '[outv]',
+      ...(audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`, '-c:a', 'aac', '-b:a', '192k'] : []),
+      '-t', String(duration),
+      '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outputPath,
+    ];
+    await run(ffmpegPath, args);
+    if (!existsSync(outputPath)) throw new Error('FFmpeg reported success but no output file was created.');
+
+    const projectForOutput: Project = JSON.parse(JSON.stringify(project));
+    for (const section of projectForOutput.lyrics.sections) {
+      for (const line of section.lines) {
+        line.text = applyCase(line.text);
+        for (const word of line.words ?? []) word.text = applyCase(word.text);
+      }
+    }
+    writeFileSync(`${outputPath}.json`, JSON.stringify({ project: projectForOutput, outputPath, duration }, null, 2));
+    return { outputPath, format: 'mp4', duration };
+  }
+
+  private drawWord(
+    word: Word,
+    displayText: string,
+    start: number,
+    end: number,
+    W: number,
+    H: number,
+    fallback: () => ResolvedWordRender,
+  ): string {
+    const r = word.render ?? fallback();
+    return buildWordDrawText({
+      safeText: escapeFilterValue(displayText),
+      fontToken: fontToken(r.fontFamily),
+      fontColor: colorToFfmpeg(r.color),
+      fontSizePx: r.fontSizePx,
+      start,
+      end,
+      width: W,
+      height: H,
+      xNorm: r.xNorm,
+      yNorm: r.yNorm,
+      opacity: r.opacity,
+      animation: r.animation,
+      stroke: r.stroke,
+      shadow: r.shadow,
+    });
   }
 }

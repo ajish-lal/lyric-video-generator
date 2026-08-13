@@ -1,0 +1,57 @@
+{
+  "title": "Rise Again",
+  "theme": "dark",
+  "lyrics": "input/sample-lyrics.txt",
+  "resolution": { "width": 1920, "height": 1080, "fps": 30 },
+  "typography": {
+    "font": "Impact",
+    "color": "#f2f4f8",
+    "shadow": true,
+    "shadowColor": "#000000",
+    "shadowOpacity": 0.72,
+    "shadowBlur": 9
+  },
+  "background": {
+    "preset": "industrial",
+    "color": "#0e0f12",
+    "gradient": ["0x111114", "0x1c1c21", "0x0d0e11"],
+    "vignette": 0.62,
+    "grain": 0.35
+  },
+  "effects": {
+    "bloom": 0.4,
+    "chromaticAberration": 3,
+    "vignette": 0.62,
+    "grain": 7,
+    "saturation": 0.68,
+    "contrast": 1.2,
+    "pushIn": 0.08,
+    "glitch": 0.03,
+    "temperature": 0.1,
+    "tint": 0
+  },
+  "wordStyles": {
+    "rise": "anger",
+    "louder": "shout",
+    "thunder": "strong",
+    "wind": "strong",
+    "spark": "emphasis",
+    "shadows": { "opacity": 0.72, "animation": "fade" },
+    "dark": { "color": "#9fdcff", "animation": "fade" },
+    "name": { "color": "#9fdcff", "animation": "fade" }
+  },
+  "sections": [
+    {
+      "type": "intro",
+      "style": { "color": "#c4ccd6", "fontSize": 90, "animation": "fade_up" }
+    },
+    {
+      "type": "verse",
+      "style": { "preset": "nu_metal_verse", "fontSize": 112, "animation": "fade_up" }
+    },
+    {
+      "type": "chorus",
+      "style": { "preset": "heavy_chorus", "fontSize": 150, "animation": "impact" }
+    }
+  ]
+}
