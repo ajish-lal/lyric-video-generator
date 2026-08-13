@@ -110,13 +110,15 @@ export class LyricVideoRenderer implements Renderer {
           );
         });
       }
-      const text = applyCase(line.text);
+      const cased = applyCase(line.text);
+      const safeText = escapeFilterValue(cased);
       const start = line.start.toFixed(3);
       const end = line.end.toFixed(3);
       const alpha = config.lyricAnimation.type === 'fade'
         ? `if(lt(t,${start}+0.35),(t-${start})/0.35,if(gt(t,${end}-0.35),(${end}-t)/0.35,1))`
         : '1';
-      return `drawtext=text='${text}':fontcolor=${asFfmpegColor(config.style.primaryColor)}:fontsize=h/15:x=(w-text_w)/2:y=${y}:borderw=3:bordercolor=black@0.65:alpha='${alpha}':enable='between(t,${start},${end})'`;
+      const font = escapeFilterValue(config.style.fontFamily);
+      return `drawtext=text='${safeText}':font='${font}':fontcolor=${asFfmpegColor(config.style.primaryColor)}:fontsize=h/15:x=(w-text_w)/2:y=${y}:borderw=3:bordercolor=black@0.65:alpha='${alpha}':enable='between(t,${start},${end})'`;
     });
 
     const palette = background.palette.slice(0, 8).map(asFfmpegColor);
@@ -142,7 +144,17 @@ export class LyricVideoRenderer implements Renderer {
     await run(ffmpegPath, args);
 
     if (!existsSync(outputPath)) throw new Error('FFmpeg reported success but no output file was created.');
-    writeFileSync(`${outputPath}.json`, JSON.stringify({ project, outputPath, duration }, null, 2));
+    // Write a copy of the project with applied casing so metadata reflects the rendered text
+    const projectForOutput: Project = JSON.parse(JSON.stringify(project));
+    for (const section of projectForOutput.lyrics.sections) {
+      for (const line of section.lines) {
+        line.text = applyCase(line.text);
+        for (const word of line.words ?? []) {
+          word.text = applyCase(word.text);
+        }
+      }
+    }
+    writeFileSync(`${outputPath}.json`, JSON.stringify({ project: projectForOutput, outputPath, duration }, null, 2));
     return { outputPath, format: 'mp4', duration };
   }
 }
