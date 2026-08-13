@@ -62,7 +62,7 @@ export class ProjectBuilder {
       },
       wordDisplay: {
         mode: 'single-word',
-        hold: 'word-end',
+        hold: 'next-word',
       },
       dynamicWordEffects: [
         {
