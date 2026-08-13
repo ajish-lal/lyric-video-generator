@@ -23,6 +23,37 @@ function run(python: string, args: string[]): Promise<void> {
   });
 }
 
+/** Smallest allowed word/segment duration; Whisper often reports 0 or overlaps. */
+const MIN_DURATION = 0.05;
+
+/**
+ * Whisper word timestamps are noisy: some report `end <= start` (zero/negative
+ * duration) and consecutive words can overlap. Both make the downstream config
+ * fail validation ("end must be greater than start") or warn about overlaps.
+ * This forces each segment's words to be strictly increasing and non-overlapping
+ * with a minimum duration, and keeps the segment span consistent with them.
+ */
+export function sanitizeSegments(segments: TranscriptSegment[]): TranscriptSegment[] {
+  return segments.map((segment) => {
+    const segStart = Math.max(0, segment.start);
+    let words: TranscriptSegment['words'];
+    if (segment.words && segment.words.length > 0) {
+      let cursor = segStart;
+      words = segment.words.map((word) => {
+        const start = Math.max(cursor, word.start, 0);
+        const end = Math.max(word.end, start + MIN_DURATION);
+        cursor = end;
+        return { ...word, start, end };
+      });
+    }
+    const start = words && words.length > 0 ? Math.min(segStart, words[0].start) : segStart;
+    const end = words && words.length > 0
+      ? Math.max(segment.end, words.at(-1)!.end)
+      : Math.max(segment.end, start + MIN_DURATION);
+    return { ...segment, start, end, words };
+  });
+}
+
 /** Offline adapter for faster-whisper. It uses CUDA automatically when available. */
 export class LocalWhisperTranscriber implements AudioTranscriber {
   async transcribe(audioPath: string): Promise<TranscriptSegment[]> {
@@ -34,10 +65,10 @@ export class LocalWhisperTranscriber implements AudioTranscriber {
       const result = JSON.parse(readFileSync(outputPath, 'utf8')) as WhisperJson;
       const segments = result.segments?.filter((segment) => segment.text.trim()) ?? [];
       if (segments.length === 0) throw new Error('Local Whisper did not detect any sung or spoken words.');
-      return segments.map((segment) => ({
+      return sanitizeSegments(segments.map((segment) => ({
         text: segment.text.trim(), start: segment.start, end: segment.end,
         words: segment.words?.filter((word) => word.text.trim()).map((word) => ({ ...word, text: word.text.trim() })),
-      }));
+      })));
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

@@ -49,23 +49,66 @@ function escapeFilterValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/:/g, '\\:').replace(/'/g, "\\'").replace(/,/g, '\\,');
 }
 
-/** Known heavy/display font files by family name, used to drive the bold title look. */
+/** Windows fonts directory (honours a relocated SystemRoot), forward-slashed. */
+const WIN_FONTS = `${(process.env.SystemRoot ?? process.env.WINDIR ?? 'C:\\Windows').replace(/\\/g, '/')}/Fonts`;
+
+/**
+ * Known font files by family name across macOS, Windows and common Linux paths,
+ * so `drawtext` gets a real `fontfile=` and never needs fontconfig (which the
+ * bundled FFmpeg builds may lack). Families without a native match fall back to
+ * a close equivalent on that OS.
+ */
 const FONT_FILE_CANDIDATES: Record<string, string[]> = {
-  impact: ['/System/Library/Fonts/Supplemental/Impact.ttf'],
-  'arial black': ['/System/Library/Fonts/Supplemental/Arial Black.ttf'],
-  'din condensed bold': ['/System/Library/Fonts/Supplemental/DIN Condensed Bold.ttf'],
-  baskerville: ['/System/Library/Fonts/Supplemental/Baskerville.ttc'],
-  arial: ['/System/Library/Fonts/Supplemental/Arial.ttf'],
+  impact: [
+    '/System/Library/Fonts/Supplemental/Impact.ttf',
+    `${WIN_FONTS}/impact.ttf`,
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  ],
+  'arial black': [
+    '/System/Library/Fonts/Supplemental/Arial Black.ttf',
+    `${WIN_FONTS}/ariblk.ttf`,
+    `${WIN_FONTS}/impact.ttf`,
+  ],
+  'din condensed bold': [
+    '/System/Library/Fonts/Supplemental/DIN Condensed Bold.ttf',
+    `${WIN_FONTS}/BebasNeue.ttf`,
+    `${WIN_FONTS}/impact.ttf`,
+  ],
+  baskerville: [
+    '/System/Library/Fonts/Supplemental/Baskerville.ttc',
+    `${WIN_FONTS}/georgia.ttf`,
+    `${WIN_FONTS}/times.ttf`,
+    '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
+  ],
+  arial: [
+    '/System/Library/Fonts/Supplemental/Arial.ttf',
+    `${WIN_FONTS}/arial.ttf`,
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  ],
 };
+
+/**
+ * Universal last-resort font files (first existing wins). Guarantees a real
+ * fontfile on any OS so drawtext never falls back to a fontconfig name.
+ */
+const FALLBACK_FONT_FILES: string[] = [
+  '/System/Library/Fonts/Supplemental/Arial.ttf',
+  '/System/Library/Fonts/Helvetica.ttc',
+  `${WIN_FONTS}/arial.ttf`,
+  `${WIN_FONTS}/segoeui.ttf`,
+  `${WIN_FONTS}/impact.ttf`,
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+];
 
 /** Resolves a concrete font file for a family so drawtext works without fontconfig. */
 function resolveFontFile(family: string | undefined): string | undefined {
-  if (!family) return undefined;
-  const overrideDir = process.env.FONT_DIR?.trim();
-  const key = family.trim().toLowerCase();
+  const overrideDir = process.env.FONT_DIR?.trim().replace(/\\/g, '/');
+  const key = family?.trim().toLowerCase();
   const candidates = [
-    ...(overrideDir ? [`${overrideDir}/${family}.ttf`, `${overrideDir}/${family}.otf`] : []),
-    ...(FONT_FILE_CANDIDATES[key] ?? []),
+    ...(overrideDir && family ? [`${overrideDir}/${family}.ttf`, `${overrideDir}/${family}.otf`] : []),
+    ...(key ? FONT_FILE_CANDIDATES[key] ?? [] : []),
+    // Always fall back to a guaranteed-present font file rather than fontconfig.
+    ...FALLBACK_FONT_FILES,
   ];
   return candidates.find((candidate) => existsSync(candidate));
 }
@@ -74,6 +117,18 @@ function resolveFontFile(family: string | undefined): string | undefined {
 function fontToken(family: string | undefined): string {
   const file = resolveFontFile(family);
   return file ? `fontfile='${escapeFilterValue(file)}'` : `font='${escapeFilterValue(family ?? 'sans')}'`;
+}
+
+/**
+ * Shrinks a font size so the word never exceeds ~92% of the frame width, so the
+ * larger default sizes stay legible for short words but long words auto-fit
+ * instead of clipping off-screen. Only shrinks, never enlarges. Impact-like
+ * glyph aspect ~0.6.
+ */
+function fitFontSize(fontSizePx: number, displayText: string, width: number): number {
+  const glyphs = Math.max(1, displayText.replace(/\s+/g, ' ').trim().length);
+  const fitted = Math.floor((width * 0.92) / (glyphs * 0.6));
+  return Math.max(1, Math.min(fontSizePx, fitted));
 }
 
 /**
@@ -482,14 +537,15 @@ export class LyricVideoRenderer implements Renderer {
     fallback: () => ResolvedWordRender,
   ): string {
     const r = word.render ?? fallback();
+    const fontSizePx = fitFontSize(r.fontSizePx, displayText, W);
     if (r.animation.motion === 'typewriter' && displayText.length > 1) {
-      return this.drawTypewriter(r, displayText, start, end, W, H);
+      return this.drawTypewriter(r, displayText, start, end, W, H, fontSizePx);
     }
     return buildWordDrawText({
       safeText: escapeFilterValue(displayText),
       fontToken: fontToken(r.fontFamily),
       fontColor: colorToFfmpeg(r.color),
-      fontSizePx: r.fontSizePx,
+      fontSizePx,
       start,
       end,
       width: W,
@@ -504,12 +560,12 @@ export class LyricVideoRenderer implements Renderer {
   }
 
   /** Reveals the word one letter at a time (real typewriter), left-anchored. */
-  private drawTypewriter(r: ResolvedWordRender, displayText: string, start: number, end: number, W: number, H: number): string {
+  private drawTypewriter(r: ResolvedWordRender, displayText: string, start: number, end: number, W: number, H: number, fontSizePx = r.fontSizePx): string {
     const chars = [...displayText];
     const n = chars.length;
     const interval = Math.min(0.07, Math.max(0.03, ((end - start) * 0.7) / n));
     // Fixed left edge so letters extend rightward from a stable origin.
-    const fullWidth = r.fontSizePx * 0.6 * n;
+    const fullWidth = fontSizePx * 0.6 * n;
     const left = (W * r.xNorm - fullWidth / 2).toFixed(1);
     const y = `(h*${r.yNorm.toFixed(4)}-text_h/2)`;
     const border = r.stroke ? `:borderw=${r.stroke.width}:bordercolor=${colorToFfmpeg(r.stroke.color)}` : '';
@@ -525,7 +581,7 @@ export class LyricVideoRenderer implements Renderer {
       const tEnd = (k < n ? start + k * interval : end).toFixed(3);
       const prefix = escapeFilterValue(chars.slice(0, k).join(''));
       draws.push(
-        `drawtext=text='${prefix}':${token}:fontcolor=${color}:fontsize=${r.fontSizePx}` +
+        `drawtext=text='${prefix}':${token}:fontcolor=${color}:fontsize=${fontSizePx}` +
         `:x='${left}':y='${y}':alpha='${alpha}'${border}${shadow}:enable='between(t,${tStart},${tEnd})'`,
       );
     }

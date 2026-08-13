@@ -25,7 +25,7 @@ export interface ResolveDefaults {
 
 export const DEFAULT_RESOLVE_DEFAULTS: ResolveDefaults = {
   fontFamily: 'Impact',
-  fontSizePx: 92,
+  fontSizePx: 160,
   color: '#ffffff',
 };
 

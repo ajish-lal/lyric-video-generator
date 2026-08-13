@@ -116,7 +116,7 @@ export function alignLyricsToTranscript(doc: LyricsDocument, segments: Transcrip
   const rawTimings: Array<TimedToken | null> = mapped.map((hi) =>
     hi >= 0 ? { start: hyp[hi].start, end: hyp[hi].end } : null,
   );
-  const timings = interpolate(rawTimings);
+  const timings = enforceMonotonic(interpolate(rawTimings));
 
   let flat = 0;
   const sections: LyricSection[] = doc.sections.map((section) => {
@@ -124,7 +124,7 @@ export function alignLyricsToTranscript(doc: LyricsDocument, segments: Transcrip
       const words: Word[] = line.words.map((word) => {
         const t = timings[flat];
         flat += 1;
-        return { ...word, start: round(t.start), end: round(t.end) };
+        return { ...word, start: t.start, end: t.end };
       });
       return {
         ...line,
@@ -146,4 +146,21 @@ export function alignLyricsToTranscript(doc: LyricsDocument, segments: Transcrip
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+/**
+ * Final safety sweep over the flattened word timings: rounds to 2 decimals and
+ * forces strictly increasing, non-overlapping words with a minimum duration, so
+ * interpolation + rounding can never yield `end <= start` (which would abort
+ * config validation) or overlaps (which would warn).
+ */
+function enforceMonotonic(timings: TimedToken[]): TimedToken[] {
+  const MIN = 0.01;
+  let cursor = 0;
+  return timings.map((t, idx) => {
+    const start = idx === 0 ? Math.max(0, round(t.start)) : Math.max(cursor, round(t.start));
+    const end = Math.max(round(t.end), round(start + MIN));
+    cursor = end;
+    return { start, end };
+  });
 }
