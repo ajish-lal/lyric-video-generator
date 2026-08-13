@@ -26,6 +26,7 @@ export class ProjectBuilder {
       style: {
         theme: 'cinematic-dark',
         fontFamily: 'Arial',
+        textCase: 'original',
         primaryColor: '#ffffff',
         accentColor: '#7cff4f',
         lyricPosition: 'center',

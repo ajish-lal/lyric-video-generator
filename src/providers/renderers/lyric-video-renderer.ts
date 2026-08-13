@@ -65,8 +65,17 @@ export class LyricVideoRenderer implements Renderer {
     const audioDuration = hasAudio ? await readMediaDuration(ffmpegPath, project.audioPath) : undefined;
     const duration = Math.max(1, allLines.at(-1)?.end ?? 0, audioDuration ?? 0);
     const y = config.style.lyricPosition === 'top' ? 'h*0.20' : config.style.lyricPosition === 'bottom' ? 'h*0.78' : 'h/2';
+    const applyCase = (input: string) => {
+      const mode = config.style?.textCase ?? 'original';
+      if (!input) return input;
+      if (mode === 'upper') return input.toUpperCase();
+      if (mode === 'lower') return input.toLowerCase();
+      if (mode === 'title') return input.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+      return input;
+    };
+
     const createTextFilter = (text: string, start: number, end: number, fade = false, effect?: Project['lyrics']['sections'][number]['lines'][number]['words'][number]) => {
-      const safeText = escapeFilterValue(text);
+      const safeText = escapeFilterValue(applyCase(text));
       const formattedStart = start.toFixed(3);
       const formattedEnd = end.toFixed(3);
       const isSmog = effect?.animation?.type === 'smog-fade';
@@ -88,9 +97,10 @@ export class LyricVideoRenderer implements Renderer {
           const end = wordDisplay.hold === 'next-word'
             ? line.words[index + 1]?.start ?? line.end
             : word.end;
-          const text = wordDisplay.mode === 'single-word'
+          const rawText = wordDisplay.mode === 'single-word'
             ? word.text
             : line.words.slice(0, index + 1).map((item) => item.text).join(' ');
+          const text = applyCase(rawText);
           return createTextFilter(
           text,
           word.start,
@@ -100,7 +110,7 @@ export class LyricVideoRenderer implements Renderer {
           );
         });
       }
-      const text = escapeFilterValue(line.text);
+      const text = applyCase(line.text);
       const start = line.start.toFixed(3);
       const end = line.end.toFixed(3);
       const alpha = config.lyricAnimation.type === 'fade'
