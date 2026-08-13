@@ -12,7 +12,7 @@ import type { AudioTranscriber } from '../../core/interfaces/transcriber.js';
 import type { LineConfig, ProjectConfig } from '../../core/models/customization.js';
 import { applyCustomizationToProject } from '../../customization/apply.js';
 
-const SECTION_TYPES = new Set<SectionType>(['chorus', 'verse', 'bridge', 'breakdown', 'intro', 'outro', 'unknown']);
+const SECTION_TYPES = new Set<SectionType>(['chorus', 'pre-chorus', 'verse', 'rap', 'bridge', 'breakdown', 'intro', 'outro', 'unknown']);
 
 function toSectionType(value: string | undefined): SectionType {
   const v = (value ?? '').trim().toLowerCase();
@@ -110,6 +110,18 @@ export class Pipeline {
     outputPath?: string,
     options?: RenderOptions,
   ): Promise<{ project: Project; render: RenderResult }> {
+    const project = await this.resolveProjectFromConfig(config);
+    const audioPath = config.audio ?? 'input/demo.mp3';
+    const output = outputPath
+      ?? join('output', `${basename(audioPath, extname(audioPath))}.mp4`);
+    return { project, render: await this.renderer.render(project, output, options) };
+  }
+
+  /**
+   * Build a fully-resolved {@link Project} from a config (lyrics resolved and
+   * customization applied) WITHOUT rendering. Used by non-FFmpeg exporters.
+   */
+  async resolveProjectFromConfig(config: ProjectConfig): Promise<Project> {
     const audioPath = config.audio ?? 'input/demo.mp3';
     const theme: BackgroundTheme = config.theme === 'white' ? 'white' : 'dark';
 
@@ -122,9 +134,6 @@ export class Pipeline {
 
     const project = this.buildProject(lyrics, audioPath, theme);
     applyCustomizationToProject(project, config);
-
-    const output = outputPath
-      ?? join('output', `${basename(audioPath, extname(audioPath))}.mp4`);
-    return { project, render: await this.renderer.render(project, output, options) };
+    return project;
   }
 }
