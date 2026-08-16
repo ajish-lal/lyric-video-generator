@@ -47,7 +47,11 @@ function resolveFfmpegPath(): string | null {
 }
 
 function escapeFilterValue(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/:/g, '\\:').replace(/'/g, "\\'").replace(/,/g, '\\,');
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/:/g, '\\:')
+    .replace(/'/g, "'\\''")
+    .replace(/,/g, '\\,');
 }
 
 /** Windows fonts directory (honours a relocated SystemRoot), forward-slashed. */
@@ -289,7 +293,7 @@ export class LyricVideoRenderer implements Renderer {
         ? `if(lt(t,${formattedStart}+0.35),(t-${formattedStart})/0.35,if(gt(t,${formattedEnd}-0.35),(${formattedEnd}-t)/0.35,1))`
         : isSmog
           ? `min(1,(t-${formattedStart})/0.18)`
-        : `min(1,(t-${formattedStart})/0.12)`;
+          : `min(1,(t-${formattedStart})/0.12)`;
       const x = isSlash ? `(w-text_w)/2+${Math.round((effect.animation?.intensity ?? 0.8) * 12)}*sin(95*t)` : '(w-text_w)/2';
       const wordY = isSmog ? `${y}-text_h/2+${Math.round((effect?.animation?.intensity ?? 0.7) * 18)}*sin(3*t)` : `${y}-text_h/2`;
       const font = fontToken(effect?.fontFamily ?? config.style.fontFamily);
@@ -307,11 +311,11 @@ export class LyricVideoRenderer implements Renderer {
             : line.words.slice(0, index + 1).map((item) => item.text).join(' ');
           const text = applyCase(rawText);
           return createTextFilter(
-          text,
-          word.start,
-          Math.max(word.start + 0.01, end),
-          false,
-          word,
+            text,
+            word.start,
+            Math.max(word.start + 0.01, end),
+            false,
+            word,
           );
         });
       }
