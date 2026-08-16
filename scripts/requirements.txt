@@ -1,1 +1,12 @@
+# Core (required): transcription engine.
 faster-whisper>=1.1.0
+
+# Optional (recommended for music): isolate the vocal from the mix before
+# transcribing so instruments don't blur word timings. Enabled automatically
+# when present; disable with SEPARATE_VOCALS=0.
+demucs>=4.0.0
+
+# Optional (recommended): phoneme-level forced alignment (wav2vec2) that snaps
+# each word onto the audio for tight boundaries. Enabled automatically when
+# present; disable with WORD_ALIGN=0.
+whisperx>=3.1.1

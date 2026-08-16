@@ -45,6 +45,23 @@ describe('alignLyricsToTranscript', () => {
     expect(flat[1].start).toBeGreaterThanOrEqual(flat[0].start);
     expect(flat[1].end).toBeLessThanOrEqual(flat[2].end);
   });
+
+  it('gives a longer un-matched word more of the gap (syllable-weighted)', () => {
+    const doc = parseLyricsFile(`[Verse]\nrise everything the fall`);
+    // Transcript anchors only "rise" (0-1) and "fall" (5-6); the two middle
+    // words are interpolated across the 1..5 gap.
+    const segments: TranscriptSegment[] = [
+      { text: 'rise', start: 0, end: 1, words: words('rise', 0, 1) },
+      { text: 'fall', start: 5, end: 6, words: words('fall', 5, 1) },
+    ];
+    const aligned = alignLyricsToTranscript(doc, segments);
+    const flat = aligned.sections.flatMap((s) => s.lines.flatMap((l) => l.words));
+    expect(flat.map((w) => w.text)).toEqual(['rise', 'everything', 'the', 'fall']);
+    const everythingDur = flat[1].end - flat[1].start;
+    const theDur = flat[2].end - flat[2].start;
+    // "everything" (4 syllables) should get much more time than "the" (1).
+    expect(everythingDur).toBeGreaterThan(theDur * 2);
+  });
 });
 
 describe('buildProjectConfig', () => {

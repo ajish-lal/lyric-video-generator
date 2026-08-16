@@ -11,3 +11,4 @@ if (-not $pythonCommand) {
 & .\.venv\Scripts\python.exe -m pip install --upgrade pip
 & .\.venv\Scripts\python.exe -m pip install -r scripts\requirements.txt
 Write-Host 'Local Whisper is ready. Its model is downloaded on the first transcription.'
+Write-Host 'Optional quality knobs: WHISPER_MODEL=medium|large-v3, SEPARATE_VOCALS=0 to skip Demucs, WORD_ALIGN=0 to skip WhisperX.'

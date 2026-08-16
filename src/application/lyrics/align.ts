@@ -11,6 +11,21 @@ function normalize(text: string): string {
   return text.toLowerCase().replace(/[^\p{L}\p{N}']/gu, '');
 }
 
+/**
+ * Rough syllable count used to share time between un-matched words. Counting
+ * vowel groups (minus a silent trailing "e") places long words like
+ * "everything" proportionally longer than "the", which is far closer to how a
+ * line is actually sung than an even split.
+ */
+function syllableWeight(text: string): number {
+  const w = normalize(text);
+  if (!w) return 1;
+  const groups = w.match(/[aeiouy]+/g);
+  let count = groups ? groups.length : 0;
+  if (count > 1 && /e$/.test(w)) count -= 1;
+  return Math.max(1, count);
+}
+
 /** Flatten a transcript into an ordered list of timed word tokens. */
 function hypothesisWords(segments: TranscriptSegment[]): Array<{ text: string } & TimedToken> {
   const out: Array<{ text: string } & TimedToken> = [];
@@ -70,9 +85,10 @@ function alignTokens(ref: string[], hyp: string[]): number[] {
 
 /**
  * Fill in timings for reference words that had no hypothesis match by spreading
- * them evenly across the gap between the surrounding anchored words.
+ * them across the gap between the surrounding anchored words, giving each word a
+ * share proportional to its syllable weight (so long words get more time).
  */
-function interpolate(timings: Array<TimedToken | null>): TimedToken[] {
+function interpolate(timings: Array<TimedToken | null>, weights: number[]): TimedToken[] {
   const n = timings.length;
   const result: TimedToken[] = new Array(n);
   let i = 0;
@@ -81,13 +97,20 @@ function interpolate(timings: Array<TimedToken | null>): TimedToken[] {
     let j = i;
     while (j < n && !timings[j]) j += 1;
     const runLength = j - i;
+    const runWeights = weights.slice(i, j).map((w) => Math.max(0.1, w));
+    const totalWeight = runWeights.reduce((sum, w) => sum + w, 0);
     const before = i > 0 ? result[i - 1] : undefined;
     const after = j < n ? (timings[j] as TimedToken) : undefined;
-    const lo = before ? before.end : after ? Math.max(0, after.start - runLength * 0.3) : i * 0.3;
-    const hi = after ? after.start : before ? before.end + runLength * 0.3 : (i + runLength) * 0.3;
-    const span = Math.max(0.01, hi - lo) / runLength;
+    // ~0.3s per syllable when one edge is open, so leading/trailing unmatched
+    // runs still land at a plausible pace instead of piling onto one instant.
+    const lo = before ? before.end : after ? Math.max(0, after.start - totalWeight * 0.3) : i * 0.3;
+    const hi = after ? after.start : before ? before.end + totalWeight * 0.3 : (i + runLength) * 0.3;
+    const span = Math.max(0.01, hi - lo);
+    let cursor = lo;
     for (let k = 0; k < runLength; k += 1) {
-      result[i + k] = { start: lo + k * span, end: lo + (k + 1) * span };
+      const share = span * (runWeights[k] / totalWeight);
+      result[i + k] = { start: cursor, end: cursor + share };
+      cursor += share;
     }
     i = j;
   }
@@ -116,7 +139,8 @@ export function alignLyricsToTranscript(doc: LyricsDocument, segments: Transcrip
   const rawTimings: Array<TimedToken | null> = mapped.map((hi) =>
     hi >= 0 ? { start: hyp[hi].start, end: hyp[hi].end } : null,
   );
-  const timings = enforceMonotonic(interpolate(rawTimings));
+  const weights = refWords.map((word) => syllableWeight(word.text));
+  const timings = enforceMonotonic(interpolate(rawTimings, weights));
 
   let flat = 0;
   const sections: LyricSection[] = doc.sections.map((section) => {
