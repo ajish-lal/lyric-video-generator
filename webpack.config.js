@@ -18,12 +18,10 @@ export default {
       {
         test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
-          },
-        },
+        loader: 'esbuild-loader',
+        // The `tsx` loader parses TypeScript and JSX (and plain JS/JSX); some
+        // `.js` files in this UI contain JSX, so it must run through it too.
+        options: { loader: 'tsx', target: 'es2020' },
       },
       {
         test: /\.css$/,
