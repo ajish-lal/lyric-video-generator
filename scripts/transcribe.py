@@ -54,6 +54,11 @@ parser.add_argument('--align', dest='align', action='store_true',
                     default=_env_flag('WORD_ALIGN', True),
                     help='Refine word timestamps with WhisperX forced alignment.')
 parser.add_argument('--no-align', dest='align', action='store_false')
+parser.add_argument('--interpolate', dest='interpolate', action='store_true',
+                    default=_env_flag('WORD_INTERPOLATE', True),
+                    help='Keep WhisperX tokens it could not place, interpolating '
+                         'their timing. Off drops them (older behaviour).')
+parser.add_argument('--no-interpolate', dest='interpolate', action='store_false')
 args = parser.parse_args()
 
 
@@ -217,7 +222,8 @@ def forced_align(payload: list, audio_path: str, language: str, device: str) -> 
             })
         if not tokens:
             continue
-        _interpolate_missing_times(tokens, seg.get('start'), seg.get('end'))
+        if args.interpolate:
+            _interpolate_missing_times(tokens, seg.get('start'), seg.get('end'))
         words = [t for t in tokens if t['start'] is not None and t['end'] is not None]
         if not words:
             continue

@@ -37,6 +37,7 @@ interface GenerateConfig {
     demucsModel?: string;
     holdSeconds?: number;
     leadSeconds?: number;
+    interpolateWords?: boolean;
   };
   viz?: Partial<MusicVizConfig> & { enabled?: boolean };
   wordDisplay?: Partial<WordDisplay>;
@@ -56,6 +57,7 @@ function applyTranscriptionEnv(t: GenerateConfig['transcription']): void {
   if (t.wordAlign !== undefined) process.env.WORD_ALIGN = t.wordAlign ? '1' : '0';
   if (t.holdSeconds !== undefined) process.env.WORD_HOLD = String(t.holdSeconds);
   if (t.leadSeconds !== undefined) process.env.WORD_LEAD = String(t.leadSeconds);
+  if (t.interpolateWords !== undefined) process.env.WORD_INTERPOLATE = t.interpolateWords ? '1' : '0';
 }
 
 function applyEncoderEnv(encoder?: string): void {

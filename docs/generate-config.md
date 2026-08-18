@@ -70,6 +70,7 @@ Maps to the environment variables the Python transcriber reads.
 | `demucsModel` | string | `htdemucs` | Demucs model name. |
 | `leadSeconds` | number | `0` | Shows each word this many seconds **early** (start shifted earlier, clamped to the previous word / 0). |
 | `holdSeconds` | number | `0` | Extends a held word's **end** by up to this much toward the next onset (covers sung vowels). `0` keeps the aligner's exact ends. |
+| `interpolateWords` | boolean | `true` | Keep WhisperX tokens it couldn't place, interpolating their timing from neighbours. `false` drops them (older behaviour). |
 
 Optional stages degrade gracefully: if Demucs or WhisperX isn't installed, the
 run logs a note and falls back. See [enhanced-transcription.md](enhanced-transcription.md).

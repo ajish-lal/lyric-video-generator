@@ -17,7 +17,8 @@
     "wordAlign": true,
     "demucsModel": "htdemucs",
     "leadSeconds": 0,
-    "holdSeconds": 0
+    "holdSeconds": 0,
+    "interpolateWords": true
   },
   "wordDisplay": {
     "mode": "cumulative",
