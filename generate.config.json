@@ -1,35 +1,35 @@
 {
-  "audio": "input/song.mp3",
-  "lyrics": "",
+  "audio": "input/vocals.wav",
+  "lyrics": "input/lyrics.txt",
   "output": "output/song.mp4",
-  "config": "output/song.json",
-  "render": true,
-
+  "config": "output/test.config.json",
+  "render": false,
   "template": "",
-
-  "resolution": { "width": 1920, "height": 1080, "fps": 30 },
-
+  "resolution": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
   "encoder": "cpu",
-
   "transcription": {
     "model": "small",
-    "separateVocals": true,
+    "separateVocals": false,
     "wordAlign": true,
     "demucsModel": "htdemucs",
-    "holdSeconds": 0,
-    "leadSeconds": 0
+    "leadSeconds": 0,
+    "holdSeconds": 0
   },
-
+  "wordDisplay": {
+    "mode": "cumulative",
+    "hold": "next-word"
+  },
   "viz": {
     "enabled": false,
     "mode": "wave",
     "position": "bottom",
-    "colors": ["#00e5ff"],
+    "colors": [
+      "#00e5ff"
+    ],
     "reflection": false
-  },
-
-  "wordDisplay": {
-    "mode": "single-word",
-    "hold": "next-word"
   }
 }
