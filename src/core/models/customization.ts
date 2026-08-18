@@ -10,7 +10,7 @@
  * exactly like before.
  */
 
-import type { MusicVizConfig } from './render.js';
+import type { MusicVizConfig, WordDisplay } from './render.js';
 
 /** Normalized 0..1 position (resolution independent). */
 export interface Position {
@@ -153,6 +153,8 @@ export interface ProjectConfig {
   wordStyles?: Record<string, StyleProperties | string>;
   /** audio-reactive visualizer drawn over the frame (needs an audio track). */
   musicViz?: MusicVizConfig;
+  /** how words appear per line: one at a time, or appended cumulatively. */
+  wordDisplay?: WordDisplay;
 }
 
 // ---------------------------------------------------------------------------

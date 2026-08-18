@@ -19,7 +19,7 @@ import { buildProjectConfig } from '../src/application/orchestration/config-gene
 import { saveConfig } from '../src/customization/config-loader.js';
 import { validateConfig } from '../src/customization/validation.js';
 import { getTemplate, listTemplates } from '../src/customization/templates/index.js';
-import type { MusicVizConfig } from '../src/core/models/render.js';
+import type { MusicVizConfig, WordDisplay } from '../src/core/models/render.js';
 
 interface GenerateConfig {
   audio?: string;
@@ -39,6 +39,7 @@ interface GenerateConfig {
     leadSeconds?: number;
   };
   viz?: Partial<MusicVizConfig> & { enabled?: boolean };
+  wordDisplay?: Partial<WordDisplay>;
 }
 
 function fail(message: string): never {
@@ -113,6 +114,9 @@ async function main(): Promise<void> {
     resolution: cfg.resolution,
     template,
     musicViz: buildViz(cfg.viz),
+    wordDisplay: cfg.wordDisplay?.mode
+      ? { mode: cfg.wordDisplay.mode, hold: cfg.wordDisplay.hold ?? 'next-word' }
+      : undefined,
   });
 
   const validation = validateConfig(projectConfig);

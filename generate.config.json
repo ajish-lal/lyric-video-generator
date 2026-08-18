@@ -26,5 +26,10 @@
     "position": "bottom",
     "colors": ["#00e5ff"],
     "reflection": false
+  },
+
+  "wordDisplay": {
+    "mode": "single-word",
+    "hold": "next-word"
   }
 }

@@ -1,6 +1,6 @@
 import type { LyricsDocument } from '../../core/models/project.js';
 import type { LineConfig, ProjectConfig, SectionConfig, WordConfig } from '../../core/models/customization.js';
-import type { MusicVizConfig } from '../../core/models/render.js';
+import type { MusicVizConfig, WordDisplay } from '../../core/models/render.js';
 import type { SongTemplate } from '../../customization/templates/index.js';
 
 export interface ConfigGenerationOptions {
@@ -9,6 +9,7 @@ export interface ConfigGenerationOptions {
   resolution?: { width?: number; height?: number; fps?: number };
   template?: SongTemplate;
   musicViz?: MusicVizConfig;
+  wordDisplay?: WordDisplay;
 }
 
 /**
@@ -19,7 +20,7 @@ export interface ConfigGenerationOptions {
  * config no longer depends on the template file.
  */
 export function buildProjectConfig(doc: LyricsDocument, options: ConfigGenerationOptions): ProjectConfig {
-  const { title, audio, resolution, template, musicViz } = options;
+  const { title, audio, resolution, template, musicViz, wordDisplay } = options;
 
   const sections: SectionConfig[] = doc.sections
     .filter((section) => section.lines.length > 0)
@@ -54,6 +55,7 @@ export function buildProjectConfig(doc: LyricsDocument, options: ConfigGeneratio
   if (template?.background) config.background = template.background;
   if (template?.effects) config.effects = template.effects;
   if (musicViz) config.musicViz = musicViz;
+  if (wordDisplay) config.wordDisplay = wordDisplay;
 
   return config;
 }
