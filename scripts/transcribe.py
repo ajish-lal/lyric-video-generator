@@ -133,9 +133,12 @@ def forced_align(payload: list, audio_path: str, language: str, device: str) -> 
         return payload
     try:
         import whisperx
-    except ImportError:
-        _log('WhisperX not installed; keeping raw Whisper word timings. '
-             'Install it (pip install whisperx) for phoneme-accurate boundaries.')
+    except ImportError as error:
+        # A broken transitive dependency (torch/numpy/pyannote mismatch) raises
+        # ImportError here too, so report the real cause instead of assuming the
+        # package is missing.
+        _log(f'WhisperX import failed ({sys.executable}); keeping raw Whisper '
+             f'word timings. Reason: {error!r}')
         return payload
 
     # WhisperX alignment runs on CPU fine; only load the model on CUDA when the
