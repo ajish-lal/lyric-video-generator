@@ -36,6 +36,10 @@ def _log(*message: object) -> None:
     print(*message, file=sys.stderr, flush=True)
 
 
+# Smallest fallback span when interpolating unplaced word timings.
+MIN_DURATION = 0.05
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--audio', required=True)
 parser.add_argument('--output', required=True)
@@ -125,6 +129,39 @@ def to_payload(segments) -> list:
     ]
 
 
+def _interpolate_missing_times(tokens: list, seg_start, seg_end) -> None:
+    """Fill start/end for tokens wav2vec2 couldn't place by spreading them evenly
+    across the gap between their placed neighbours. Edits `tokens` in place so no
+    word is lost. Runs with no placed anchor at all are left untouched."""
+    n = len(tokens)
+    anchors = [i for i, t in enumerate(tokens) if t['start'] is not None and t['end'] is not None]
+    if not anchors:
+        return
+
+    lo = float(seg_start) if seg_start is not None else tokens[anchors[0]]['start']
+    hi = float(seg_end) if seg_end is not None else tokens[anchors[-1]]['end']
+
+    i = 0
+    while i < n:
+        if tokens[i]['start'] is not None and tokens[i]['end'] is not None:
+            i += 1
+            continue
+        # Span of consecutive unplaced tokens [i, j).
+        j = i
+        while j < n and (tokens[j]['start'] is None or tokens[j]['end'] is None):
+            j += 1
+        left = tokens[i - 1]['end'] if i > 0 else lo
+        right = tokens[j]['start'] if j < n else hi
+        if right <= left:
+            right = left + MIN_DURATION * (j - i + 1)
+        step = (right - left) / (j - i + 1)
+        for k in range(i, j):
+            start = left + step * (k - i)
+            tokens[k]['start'] = start
+            tokens[k]['end'] = start + step
+        i = j
+
+
 def forced_align(payload: list, audio_path: str, language: str, device: str) -> list:
     """Snap each word onto the audio with WhisperX (wav2vec2). Falls back to the
     raw Whisper word timings if WhisperX (or an alignment model for the detected
@@ -163,15 +200,25 @@ def forced_align(payload: list, audio_path: str, language: str, device: str) -> 
 
     aligned: list = []
     for seg in result.get('segments', []):
-        words = []
+        # Keep every token with text; wav2vec2 leaves start/end off tokens it
+        # couldn't place (digits, symbols, some sung syllables). Dropping them
+        # loses words, so interpolate their timing from placed neighbours instead.
+        tokens = []
         for word in seg.get('words', []):
-            # WhisperX leaves start/end off tokens it could not place (digits,
-            # symbols); skip them so downstream sanitisation can interpolate.
-            if word.get('start') is None or word.get('end') is None:
-                continue
             text = str(word.get('word', '')).strip()
-            if text:
-                words.append({'text': text, 'start': float(word['start']), 'end': float(word['end'])})
+            if not text:
+                continue
+            start = word.get('start')
+            end = word.get('end')
+            tokens.append({
+                'text': text,
+                'start': float(start) if start is not None else None,
+                'end': float(end) if end is not None else None,
+            })
+        if not tokens:
+            continue
+        _interpolate_missing_times(tokens, seg.get('start'), seg.get('end'))
+        words = [t for t in tokens if t['start'] is not None and t['end'] is not None]
         if not words:
             continue
         aligned.append({

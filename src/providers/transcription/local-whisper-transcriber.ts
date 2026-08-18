@@ -49,20 +49,20 @@ function run(python: string, args: string[]): Promise<void> {
 const MIN_DURATION = 0.05;
 
 /**
- * Held/sung vowels: wav2vec2 ends a word at its consonant, so sustained notes
- * look clipped. Extend a word's end by at most this much toward the next word's
- * onset — enough to cover the held vowel without lingering past when it's sung.
- */
-const MAX_HOLD = 0.25;
-
-/**
  * Whisper word timestamps are noisy: some report `end <= start` (zero/negative
  * duration) and consecutive words can overlap. Both make the downstream config
  * fail validation ("end must be greater than start") or warn about overlaps.
  * This forces each segment's words to be strictly increasing and non-overlapping
  * with a minimum duration, and keeps the segment span consistent with them.
+ *
+ * `holdSeconds` optionally nudges a held word's end past its consonant (sung
+ * vowels read as clipped otherwise), capped so it never lingers to the next
+ * onset. It is a heuristic — pass 0 to keep the aligner's exact ends.
+ *
+ * `leadSeconds` optionally shows each word early by shifting its start earlier,
+ * clamped so it never crosses the previous word's end or 0.
  */
-export function sanitizeSegments(segments: TranscriptSegment[]): TranscriptSegment[] {
+export function sanitizeSegments(segments: TranscriptSegment[], holdSeconds = 0, leadSeconds = 0): TranscriptSegment[] {
   return segments.map((segment) => {
     const segStart = Math.max(0, segment.start);
     let words: TranscriptSegment['words'];
@@ -74,11 +74,18 @@ export function sanitizeSegments(segments: TranscriptSegment[]): TranscriptSegme
         cursor = end;
         return { ...word, start, end };
       });
-      // Nudge a held word's end past its consonant, but cap the added time so
-      // it doesn't linger after it's actually sung.
-      for (let i = 0; i < words.length - 1; i += 1) {
-        const gap = words[i + 1].start - words[i].end;
-        if (gap > 0) words[i] = { ...words[i], end: words[i].end + Math.min(gap, MAX_HOLD) };
+      if (holdSeconds > 0) {
+        for (let i = 0; i < words.length - 1; i += 1) {
+          const gap = words[i + 1].start - words[i].end;
+          if (gap > 0) words[i] = { ...words[i], end: words[i].end + Math.min(gap, holdSeconds) };
+        }
+      }
+      if (leadSeconds > 0) {
+        for (let i = 0; i < words.length; i += 1) {
+          const floor = i > 0 ? words[i - 1].end : 0;
+          const start = Math.max(floor, words[i].start - leadSeconds);
+          if (start < words[i].start) words[i] = { ...words[i], start };
+        }
       }
     }
     const start = words && words.length > 0 ? Math.min(segStart, words[0].start) : segStart;
@@ -91,6 +98,18 @@ export function sanitizeSegments(segments: TranscriptSegment[]): TranscriptSegme
 
 /** Offline adapter for faster-whisper. It uses CUDA automatically when available. */
 export class LocalWhisperTranscriber implements AudioTranscriber {
+  /** Held-vowel end-stretch in seconds; 0 (default) keeps the aligner's ends. */
+  private readonly holdSeconds: number;
+  /** Shows each word this many seconds early; 0 (default) keeps aligner starts. */
+  private readonly leadSeconds: number;
+
+  constructor(options: { holdSeconds?: number; leadSeconds?: number } = {}) {
+    const envHold = Number(globalThis.process.env.WORD_HOLD);
+    const envLead = Number(globalThis.process.env.WORD_LEAD);
+    this.holdSeconds = options.holdSeconds ?? (Number.isFinite(envHold) && envHold > 0 ? envHold : 0);
+    this.leadSeconds = options.leadSeconds ?? (Number.isFinite(envLead) && envLead > 0 ? envLead : 0);
+  }
+
   async transcribe(audioPath: string): Promise<TranscriptSegment[]> {
     const python = existsSync('.venv/Scripts/python.exe')
       ? '.venv/Scripts/python.exe'
@@ -105,7 +124,7 @@ export class LocalWhisperTranscriber implements AudioTranscriber {
       return sanitizeSegments(segments.map((segment) => ({
         text: segment.text.trim(), start: segment.start, end: segment.end,
         words: segment.words?.filter((word) => word.text.trim()).map((word) => ({ ...word, text: word.text.trim() })),
-      })));
+      })), this.holdSeconds, this.leadSeconds);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

@@ -15,7 +15,9 @@
     "model": "small",
     "separateVocals": true,
     "wordAlign": true,
-    "demucsModel": "htdemucs"
+    "demucsModel": "htdemucs",
+    "holdSeconds": 0,
+    "leadSeconds": 0
   },
 
   "viz": {

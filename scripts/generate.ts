@@ -35,6 +35,8 @@ interface GenerateConfig {
     separateVocals?: boolean;
     wordAlign?: boolean;
     demucsModel?: string;
+    holdSeconds?: number;
+    leadSeconds?: number;
   };
   viz?: Partial<MusicVizConfig> & { enabled?: boolean };
 }
@@ -51,6 +53,8 @@ function applyTranscriptionEnv(t: GenerateConfig['transcription']): void {
   if (t.demucsModel) process.env.DEMUCS_MODEL = t.demucsModel;
   if (t.separateVocals !== undefined) process.env.SEPARATE_VOCALS = t.separateVocals ? '1' : '0';
   if (t.wordAlign !== undefined) process.env.WORD_ALIGN = t.wordAlign ? '1' : '0';
+  if (t.holdSeconds !== undefined) process.env.WORD_HOLD = String(t.holdSeconds);
+  if (t.leadSeconds !== undefined) process.env.WORD_LEAD = String(t.leadSeconds);
 }
 
 function applyEncoderEnv(encoder?: string): void {
