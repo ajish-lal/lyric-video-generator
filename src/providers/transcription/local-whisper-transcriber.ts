@@ -50,10 +50,10 @@ const MIN_DURATION = 0.05;
 
 /**
  * Held/sung vowels: wav2vec2 ends a word at its consonant, so sustained notes
- * look clipped. Extend a word's end toward the next word's start, but only up to
- * this gap so real pauses / instrumental breaks aren't stretched over.
+ * look clipped. Extend a word's end by at most this much toward the next word's
+ * onset — enough to cover the held vowel without lingering past when it's sung.
  */
-const MAX_HOLD = 0.6;
+const MAX_HOLD = 0.25;
 
 /**
  * Whisper word timestamps are noisy: some report `end <= start` (zero/negative
@@ -74,10 +74,11 @@ export function sanitizeSegments(segments: TranscriptSegment[]): TranscriptSegme
         cursor = end;
         return { ...word, start, end };
       });
-      // Fill small gaps so a held word sustains up to the next word's onset.
+      // Nudge a held word's end past its consonant, but cap the added time so
+      // it doesn't linger after it's actually sung.
       for (let i = 0; i < words.length - 1; i += 1) {
         const gap = words[i + 1].start - words[i].end;
-        if (gap > 0 && gap <= MAX_HOLD) words[i] = { ...words[i], end: words[i + 1].start };
+        if (gap > 0) words[i] = { ...words[i], end: words[i].end + Math.min(gap, MAX_HOLD) };
       }
     }
     const start = words && words.length > 0 ? Math.min(segStart, words[0].start) : segStart;
