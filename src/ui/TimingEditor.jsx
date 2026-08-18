@@ -1,111 +1,36 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
+import LyricPreview from './LyricPreview.jsx';
+import EditorToolbar from './components/EditorToolbar.jsx';
+import EditorSettings from './components/EditorSettings.jsx';
+import ShortcutsLegend from './components/ShortcutsLegend.jsx';
+import WaveformSeek from './components/WaveformSeek.jsx';
+import WordList from './components/WordList.jsx';
+import Inspector from './components/Inspector.jsx';
+import {
+  MIN_DURATION,
+  REGION_COLORS,
+  round,
+  flattenUnits,
+  applyUnitsToConfig,
+  computeWarnings,
+  enforceNoOverlap,
+} from './timing-model.js';
 
-const MIN_DURATION = 0.05;
-const REGION_COLORS = ['rgba(37,99,235,0.28)', 'rgba(124,58,237,0.28)'];
-const ACTIVE_COLOR = 'rgba(16,185,129,0.42)';
-
-/** Round to millisecond precision for clean, re-editable JSON. */
-const round = (value) => Math.round(value * 1000) / 1000;
-
-const formatTime = (seconds) => {
-  if (!Number.isFinite(seconds)) return '0:00.000';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  const ms = Math.round((seconds - Math.floor(seconds)) * 1000);
-  return `${m}:${String(s).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
-};
-
-/**
- * Flatten a ProjectConfig into an ordered list of timed units. Words are
- * preferred; a line with no timed words becomes a single unit. Each unit keeps
- * the path (section/line/word index) so edits can be written back on save.
- */
-function flattenUnits(config) {
-  const units = [];
-  let id = 0;
-  const pushFromLines = (lines, si) => {
-    (lines || []).forEach((line, li) => {
-      const words = Array.isArray(line.words) ? line.words : [];
-      const timedWords = words.filter((w) => typeof w.start === 'number' && typeof w.end === 'number');
-      if (timedWords.length > 0) {
-        words.forEach((w, wi) => {
-          if (typeof w.start === 'number' && typeof w.end === 'number') {
-            units.push({ id: id++, si, li, wi, level: 'word', text: w.text ?? '', start: w.start, end: w.end });
-          }
-        });
-      } else if (typeof line.start === 'number' && typeof line.end === 'number') {
-        units.push({ id: id++, si, li, wi: null, level: 'line', text: line.text ?? '', start: line.start, end: line.end });
-      }
-    });
-  };
-  (config.sections || []).forEach((sec, si) => pushFromLines(sec.lines, si));
-  pushFromLines(config.lines, null); // top-level inline lines (si === null)
-  units.sort((a, b) => a.start - b.start);
-  return units;
-}
-
-/** Locate the underlying word/line object a unit points at inside a config. */
-function targetFor(config, unit) {
-  const line = unit.si === null ? config.lines?.[unit.li] : config.sections?.[unit.si]?.lines?.[unit.li];
-  if (!line) return null;
-  return unit.wi === null ? line : line.words?.[unit.wi] ?? null;
-}
-
-/**
- * Write unit timings back into a deep-cloned config and re-derive line and
- * section spans from their children so the file stays internally consistent.
- */
-function applyUnitsToConfig(config, units) {
-  const next = JSON.parse(JSON.stringify(config));
-  for (const unit of units) {
-    const target = targetFor(next, unit);
-    if (target) {
-      target.start = round(unit.start);
-      target.end = round(Math.max(unit.end, unit.start + MIN_DURATION));
-    }
-  }
-  const spanFrom = (children) => {
-    const timed = children.filter((c) => typeof c.start === 'number' && typeof c.end === 'number');
-    if (timed.length === 0) return null;
-    return { start: round(Math.min(...timed.map((c) => c.start))), end: round(Math.max(...timed.map((c) => c.end))) };
-  };
-  const reflowLines = (lines) => (lines || []).forEach((line) => {
-    if (Array.isArray(line.words) && line.words.length > 0) {
-      const span = spanFrom(line.words);
-      if (span) { line.start = span.start; line.end = span.end; }
-    }
-  });
-  (next.sections || []).forEach((sec) => {
-    reflowLines(sec.lines);
-    if (Array.isArray(sec.lines) && sec.lines.length > 0) {
-      const span = spanFrom(sec.lines);
-      if (span) { sec.start = span.start; sec.end = span.end; }
-    }
-  });
-  reflowLines(next.lines);
-  return next;
-}
-
-/** Overlap / ordering warnings so the user can spot messy edits before saving. */
-function computeWarnings(units) {
-  const warnings = [];
-  const sorted = [...units].sort((a, b) => a.start - b.start);
-  for (let i = 0; i < sorted.length; i += 1) {
-    if (sorted[i].end <= sorted[i].start) warnings.push(`"${sorted[i].text}" has end ≤ start.`);
-    if (i > 0 && sorted[i].start < sorted[i - 1].end - 1e-6) {
-      warnings.push(`"${sorted[i].text}" overlaps "${sorted[i - 1].text}".`);
-    }
-  }
-  return warnings;
-}
-
-export default function TimingEditor() {
+export default function TimingEditor({ active = true }) {
   const containerRef = useRef(null);
   const wsRef = useRef(null);
   const regionsRef = useRef(null);
   const unitsRef = useRef([]);
+
+  const originalUnitsRef = useRef([]);
+  const pastRef = useRef([]);
+  const futureRef = useRef([]);
+  const dragSnapshotRef = useRef(null);
+  const lastMovedIdRef = useRef(null);
+  const dragModeRef = useRef('none');
+  const activeRef = useRef(active);
 
   const [config, setConfig] = useState(null);
   const [configName, setConfigName] = useState('config.json');
@@ -116,9 +41,16 @@ export default function TimingEditor() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [copiedStyle, setCopiedStyle] = useState(null);
+  const [dragMode, setDragMode] = useState('none');
+  const [redrawKey, setRedrawKey] = useState(0);
+  const [showPreview, setShowPreview] = useState(true);
   const [status, setStatus] = useState('Load an audio file and a config JSON to begin.');
 
   useEffect(() => { unitsRef.current = units; }, [units]);
+  useEffect(() => { dragModeRef.current = dragMode; }, [dragMode]);
+  useEffect(() => { activeRef.current = active; }, [active]);
 
   const warnings = useMemo(() => computeWarnings(units), [units]);
   const selected = useMemo(() => units.find((u) => u.id === selectedId) ?? null, [units, selectedId]);
@@ -126,6 +58,83 @@ export default function TimingEditor() {
     const u = units.find((unit) => currentTime >= unit.start && currentTime < unit.end);
     return u ? u.id : null;
   }, [units, currentTime]);
+
+  const canUndo = pastRef.current.length > 0;
+  const canRedo = futureRef.current.length > 0;
+
+  const commitUnits = useCallback((next) => {
+    pastRef.current = [...pastRef.current, unitsRef.current];
+    futureRef.current = [];
+    setUnits(next);
+    setRedrawKey((k) => k + 1);
+  }, []);
+
+  const undo = useCallback(() => {
+    if (pastRef.current.length === 0) return;
+    const prev = pastRef.current[pastRef.current.length - 1];
+    pastRef.current = pastRef.current.slice(0, -1);
+    futureRef.current = [unitsRef.current, ...futureRef.current];
+    setUnits(prev);
+    setRedrawKey((k) => k + 1);
+  }, []);
+
+  const redo = useCallback(() => {
+    if (futureRef.current.length === 0) return;
+    const nextState = futureRef.current[0];
+    futureRef.current = futureRef.current.slice(1);
+    pastRef.current = [...pastRef.current, unitsRef.current];
+    setUnits(nextState);
+    setRedrawKey((k) => k + 1);
+  }, []);
+
+  const reset = useCallback(() => {
+    if (originalUnitsRef.current.length === 0) return;
+    pastRef.current = [...pastRef.current, unitsRef.current];
+    futureRef.current = [];
+    setUnits(originalUnitsRef.current.map((u) => ({ ...u })));
+    setSelectedId(null);
+    setRedrawKey((k) => k + 1);
+  }, []);
+
+  // Space toggles playback; arrows seek (±1s, ±5s with Shift) while the editor
+  // tab is active and no field is focused.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!activeRef.current || !wsRef.current) return;
+      const t = e.target;
+      const tag = t?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t?.isContentEditable) return;
+      const ws = wsRef.current;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        ws.playPause();
+      } else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        // Seek ±1s, or ±5s with Shift.
+        e.preventDefault();
+        const step = (e.shiftKey ? 5 : 1) * (e.code === 'ArrowLeft' ? -1 : 1);
+        const total = ws.getDuration() || 0;
+        ws.setTime(Math.min(total, Math.max(0, ws.getCurrentTime() + step)));
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Undo/redo/reset also fires keyboard shortcuts.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!activeRef.current || !(e.metaKey || e.ctrlKey)) return;
+      if (e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+      } else if (e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [undo, redo]);
 
   const drawRegions = useCallback(() => {
     const regions = regionsRef.current;
@@ -151,7 +160,7 @@ export default function TimingEditor() {
     const ws = WaveSurfer.create({
       container: containerRef.current,
       url: audioUrl,
-      height: 120,
+      height: 170,
       waveColor: '#4b5563',
       progressColor: '#2563eb',
       cursorColor: '#f9fafb',
@@ -169,22 +178,58 @@ export default function TimingEditor() {
 
     regions.on('region-updated', (region) => {
       const id = Number(region.id);
+      lastMovedIdRef.current = id;
       setUnits((prev) => prev.map((u) => (u.id === id ? { ...u, start: region.start, end: region.end } : u)));
     });
     regions.on('region-clicked', (region, e) => {
       e.stopPropagation();
       setSelectedId(Number(region.id));
-      wsRef.current?.setTime(region.start);
+      setSelectedIds([Number(region.id)]);
+      // Seek to the exact click position inside the region, not just its start.
+      const el = region.element;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const rel = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        wsRef.current?.setTime(region.start + rel * (region.end - region.start));
+      } else {
+        wsRef.current?.setTime(region.start);
+      }
     });
 
-    return () => { ws.destroy(); wsRef.current = null; regionsRef.current = null; setReady(false); };
+    // Snapshot before a drag; on release resolve overlaps per the chosen mode.
+    const el = containerRef.current;
+    const onDown = () => { dragSnapshotRef.current = unitsRef.current; lastMovedIdRef.current = null; };
+    const onUp = () => {
+      const movedId = lastMovedIdRef.current;
+      const snapshot = dragSnapshotRef.current;
+      dragSnapshotRef.current = null;
+      lastMovedIdRef.current = null;
+      if (movedId == null || !snapshot) return;
+      const resolved = enforceNoOverlap(unitsRef.current, movedId, dragModeRef.current);
+      pastRef.current = [...pastRef.current, snapshot];
+      futureRef.current = [];
+      setUnits(resolved);
+      setRedrawKey((k) => k + 1);
+    };
+    el.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointerup', onUp);
+
+    return () => {
+      el.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', onUp);
+      ws.destroy();
+      wsRef.current = null;
+      regionsRef.current = null;
+      setReady(false);
+    };
   }, [audioUrl, drawRegions]);
 
-  // Re-draw regions when a config is loaded after the audio is ready.
-  useEffect(() => { if (ready) drawRegions(); }, [ready, config, drawRegions]);
+  // Re-draw regions when a config loads or after undo/redo/reset/overlap resolve.
+  useEffect(() => { if (ready) drawRegions(); }, [ready, config, redrawKey, drawRegions]);
 
   const onAudioFile = (event) => {
     const file = event.target.files?.[0];
+    event.target.blur();
     if (!file) return;
     setAudioUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     setStatus(`Loaded audio: ${file.name}`);
@@ -192,6 +237,7 @@ export default function TimingEditor() {
 
   const onConfigFile = async (event) => {
     const file = event.target.files?.[0];
+    event.target.blur();
     if (!file) return;
     try {
       const parsed = JSON.parse(await file.text());
@@ -199,7 +245,12 @@ export default function TimingEditor() {
       setConfig(parsed);
       setConfigName(file.name);
       setUnits(flat);
-      setSelectedId(null);
+      originalUnitsRef.current = flat.map((u) => ({ ...u }));
+      pastRef.current = [];
+      futureRef.current = [];
+      const first = flat[0]?.id ?? null;
+      setSelectedId(first);
+      setSelectedIds(first == null ? [] : [first]);
       setStatus(flat.length > 0 ? `Loaded ${flat.length} timed words from ${file.name}.` : 'No timed words found in this config.');
     } catch (error) {
       setStatus(`Could not parse config: ${error.message}`);
@@ -208,9 +259,76 @@ export default function TimingEditor() {
 
   const patchSelected = (patch) => {
     if (selected == null) return;
-    setUnits((prev) => prev.map((u) => (u.id === selected.id ? { ...u, ...patch } : u)));
-    const region = regionsRef.current?.getRegions().find((r) => Number(r.id) === selected.id);
-    if (region) region.setOptions({ start: patch.start ?? selected.start, end: patch.end ?? selected.end });
+    const patched = unitsRef.current.map((u) => (u.id === selected.id ? { ...u, ...patch } : u));
+    commitUnits(enforceNoOverlap(patched, selected.id, dragModeRef.current));
+  };
+
+  const setUnitFontSize = (id, value) => {
+    commitUnits(unitsRef.current.map((u) => (u.id === id ? { ...u, fontSize: value } : u)));
+  };
+
+  const setUnitColor = (id, value) => {
+    commitUnits(unitsRef.current.map((u) => (u.id === id ? { ...u, color: value } : u)));
+  };
+
+  // Click behaviour for the word list: plain click selects one; Cmd/Ctrl-click
+  // toggles a clip in the multi-selection used as the paste target.
+  const selectRow = (id, additive) => {
+    setSelectedId(id);
+    setSelectedIds((prev) => {
+      if (!additive) return [id];
+      return prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+    });
+    wsRef.current?.setTime(unitsRef.current.find((u) => u.id === id)?.start ?? 0);
+  };
+
+  const copyStyle = () => {
+    if (!selected) return;
+    setCopiedStyle({ fontSize: selected.fontSize, color: selected.color });
+    setStatus('Copied style (font size + colour).');
+  };
+
+  const pasteStyle = () => {
+    if (!copiedStyle) return;
+    const targets = new Set(selectedIds.length ? selectedIds : selectedId != null ? [selectedId] : []);
+    if (targets.size === 0) return;
+    commitUnits(unitsRef.current.map((u) => (targets.has(u.id) ? { ...u, fontSize: copiedStyle.fontSize, color: copiedStyle.color } : u)));
+    setStatus(`Pasted style onto ${targets.size} clip(s).`);
+  };
+
+  // Append a new timed word to the selected clip's line at the current playhead.
+  const addWord = () => {
+    if (!config || !selected || selected.si === undefined) {
+      setStatus('Select a word first — new words are added to its line.');
+      return;
+    }
+    const next = JSON.parse(JSON.stringify(config));
+    const line = selected.si === null ? next.lines?.[selected.li] : next.sections?.[selected.si]?.lines?.[selected.li];
+    if (!line) { setStatus('Could not locate the line to add to.'); return; }
+    if (!Array.isArray(line.words)) line.words = [];
+    const start = round(Math.min(currentTime, (duration || currentTime + 1) - 0.5));
+    const end = round(start + 0.5);
+    line.words.push({ text: 'new', start, end, style: {} });
+    const wi = line.words.length - 1;
+    const nextId = unitsRef.current.reduce((m, u) => Math.max(m, u.id), -1) + 1;
+    const unit = { id: nextId, si: selected.si, li: selected.li, wi, level: 'word', text: 'new', start, end };
+    setConfig(next);
+    commitUnits([...unitsRef.current, unit].sort((a, b) => a.start - b.start));
+    setSelectedId(nextId);
+    setSelectedIds([nextId]);
+    setStatus('Added a new word — edit its text/timing, then export.');
+  };
+
+  const setUnitText = (id, value) => {
+    commitUnits(unitsRef.current.map((u) => (u.id === id ? { ...u, text: value } : u)));
+  };
+
+  const setResolution = (patch) => {
+    setConfig((c) => (c ? { ...c, resolution: { ...(c.resolution || {}), ...patch } } : c));
+  };
+
+  const setGlobalFontSize = (value) => {
+    setConfig((c) => (c ? { ...c, typography: { ...(c.typography || {}), fontSize: value } } : c));
   };
 
   const nudge = (delta, edge) => {
@@ -218,6 +336,15 @@ export default function TimingEditor() {
     const start = edge === 'start' ? round(Math.max(0, selected.start + delta)) : selected.start;
     const end = edge === 'end' ? round(Math.max(start + MIN_DURATION, selected.end + delta)) : selected.end;
     patchSelected({ start, end });
+  };
+
+  // Seek from a pointer position on the seek bar (click or drag).
+  const scrubFromEvent = (e) => {
+    const ws = wsRef.current;
+    if (!ws) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const rel = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    ws.setTime(rel * (ws.getDuration() || 0));
   };
 
   const save = () => {
@@ -233,77 +360,79 @@ export default function TimingEditor() {
     setStatus(`Saved ${a.download}.`);
   };
 
+  const resW = config?.resolution?.width ?? 1920;
+  const resH = config?.resolution?.height ?? 1080;
+  const globalFontSize = config?.typography?.fontSize ?? 160;
+  const resPreset = `${resW}x${resH}`;
+
   return (
     <div className="editor">
-      <div className="editor-toolbar">
-        <label className="file-btn">Audio (mp3)
-          <input type="file" accept="audio/*" onChange={onAudioFile} />
-        </label>
-        <label className="file-btn">Config (json)
-          <input type="file" accept="application/json,.json" onChange={onConfigFile} />
-        </label>
-        <button type="button" disabled={!ready} onClick={() => wsRef.current?.playPause()}>
-          {playing ? 'Pause' : 'Play'}
-        </button>
-        <button type="button" disabled={!ready} onClick={() => { wsRef.current?.stop(); setCurrentTime(0); }}>Stop</button>
-        <span className="time">{formatTime(currentTime)} / {formatTime(duration)}</span>
-        <button type="button" className="save" disabled={!config} onClick={save}>Export timed JSON</button>
-      </div>
+      <EditorToolbar
+        ready={ready}
+        config={config}
+        playing={playing}
+        dragMode={dragMode}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        showPreview={showPreview}
+        currentTime={currentTime}
+        duration={duration}
+        onAudioFile={onAudioFile}
+        onConfigFile={onConfigFile}
+        onPlayPause={() => wsRef.current?.playPause()}
+        onStop={() => { wsRef.current?.stop(); setCurrentTime(0); }}
+        onDragModeChange={setDragMode}
+        onUndo={undo}
+        onRedo={redo}
+        onReset={reset}
+        onTogglePreview={() => setShowPreview((v) => !v)}
+        onSave={save}
+      />
 
-      <div ref={containerRef} className="waveform" />
+      <EditorSettings
+        config={config}
+        resPreset={resPreset}
+        globalFontSize={globalFontSize}
+        onResolutionChange={setResolution}
+        onGlobalFontSizeChange={setGlobalFontSize}
+      />
+
+      <ShortcutsLegend />
+
+      <WaveformSeek
+        containerRef={containerRef}
+        duration={duration}
+        currentTime={currentTime}
+        onScrub={scrubFromEvent}
+      />
       {!audioUrl && <div className="hint">Pick an audio file to render the waveform.</div>}
 
+      {showPreview && <LyricPreview units={units} currentTime={currentTime} config={config} />}
+
       <div className="editor-body">
-        <div className="word-list">
-          <h3>Words ({units.length})</h3>
-          <div className="word-scroll">
-            {units.map((u) => (
-              <button
-                type="button"
-                key={u.id}
-                className={`word-row${u.id === selectedId ? ' selected' : ''}${u.id === activeId ? ' active' : ''}`}
-                onClick={() => { setSelectedId(u.id); wsRef.current?.setTime(u.start); }}
-              >
-                <span className="word-text">{u.text || <em>(blank)</em>}</span>
-                <span className="word-time">{u.start.toFixed(2)}–{u.end.toFixed(2)}s</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <WordList
+          units={units}
+          selectedId={selectedId}
+          selectedIds={selectedIds}
+          activeId={activeId}
+          hasSelection={!!selected}
+          canPaste={!!copiedStyle && (selectedIds.length > 0 || selectedId != null)}
+          onCopyStyle={copyStyle}
+          onPasteStyle={pasteStyle}
+          onAddWord={addWord}
+          onSelectRow={selectRow}
+        />
 
-        <div className="inspector">
-          <h3>Selected word</h3>
-          {selected ? (
-            <>
-              <div className="field"><span>Text</span><strong>{selected.text || '(blank)'}</strong></div>
-              <label className="field">Start (s)
-                <input type="number" step="0.01" min="0" value={selected.start}
-                  onChange={(e) => patchSelected({ start: round(Math.max(0, Number(e.target.value))) })} />
-              </label>
-              <label className="field">End (s)
-                <input type="number" step="0.01" min="0" value={selected.end}
-                  onChange={(e) => patchSelected({ end: round(Math.max(selected.start + MIN_DURATION, Number(e.target.value))) })} />
-              </label>
-              <div className="nudge">
-                <span>Start</span>
-                <button type="button" onClick={() => nudge(-0.05, 'start')}>-50ms</button>
-                <button type="button" onClick={() => nudge(0.05, 'start')}>+50ms</button>
-              </div>
-              <div className="nudge">
-                <span>End</span>
-                <button type="button" onClick={() => nudge(-0.05, 'end')}>-50ms</button>
-                <button type="button" onClick={() => nudge(0.05, 'end')}>+50ms</button>
-              </div>
-            </>
-          ) : <p className="muted">Click a word on the waveform or in the list.</p>}
-
-          {warnings.length > 0 && (
-            <div className="warnings">
-              <h4>{warnings.length} warning(s)</h4>
-              <ul>{warnings.slice(0, 8).map((w, i) => <li key={i}>{w}</li>)}</ul>
-            </div>
-          )}
-        </div>
+        <Inspector
+          selected={selected}
+          globalFontSize={globalFontSize}
+          warnings={warnings}
+          onTextChange={setUnitText}
+          onPatch={patchSelected}
+          onFontSizeChange={setUnitFontSize}
+          onColorChange={setUnitColor}
+          onNudge={nudge}
+        />
       </div>
 
       <div className="status">{status}</div>

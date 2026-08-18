@@ -34,7 +34,9 @@ export default function App() {
         <button type="button" className={view === 'generate' ? 'tab active' : 'tab'} onClick={() => setView('generate')}>Generate project</button>
       </nav>
 
-      {view === 'editor' && <TimingEditor />}
+      <div style={{ display: view === 'editor' ? 'block' : 'none' }}>
+        <TimingEditor active={view === 'editor'} />
+      </div>
 
       {view === 'generate' && (
         <>
