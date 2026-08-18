@@ -49,6 +49,13 @@ function run(python: string, args: string[]): Promise<void> {
 const MIN_DURATION = 0.05;
 
 /**
+ * Held/sung vowels: wav2vec2 ends a word at its consonant, so sustained notes
+ * look clipped. Extend a word's end toward the next word's start, but only up to
+ * this gap so real pauses / instrumental breaks aren't stretched over.
+ */
+const MAX_HOLD = 0.6;
+
+/**
  * Whisper word timestamps are noisy: some report `end <= start` (zero/negative
  * duration) and consecutive words can overlap. Both make the downstream config
  * fail validation ("end must be greater than start") or warn about overlaps.
@@ -67,6 +74,11 @@ export function sanitizeSegments(segments: TranscriptSegment[]): TranscriptSegme
         cursor = end;
         return { ...word, start, end };
       });
+      // Fill small gaps so a held word sustains up to the next word's onset.
+      for (let i = 0; i < words.length - 1; i += 1) {
+        const gap = words[i + 1].start - words[i].end;
+        if (gap > 0 && gap <= MAX_HOLD) words[i] = { ...words[i], end: words[i + 1].start };
+      }
     }
     const start = words && words.length > 0 ? Math.min(segStart, words[0].start) : segStart;
     const end = words && words.length > 0
