@@ -1,7 +1,8 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { spawn } from 'node:child_process';
-import { join, resolve } from 'node:path';
+import { delimiter, dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
+import ffmpegStaticPath from 'ffmpeg-static';
 import type { AudioTranscriber, TranscriptSegment } from '../../core/interfaces/transcriber.js';
 
 type WhisperJson = {
@@ -13,9 +14,24 @@ type WhisperJson = {
   }>;
 };
 
+/**
+ * WhisperX and Demucs shell out to a bare `ffmpeg`, which isn't on PATH on a
+ * typical Windows box. Prepend the bundled ffmpeg-static binary's folder so the
+ * spawned Python (and its subprocesses) can find it. Returns the env unchanged
+ * when the bundled binary is missing.
+ */
+function envWithFfmpeg(): NodeJS.ProcessEnv {
+  const env = { ...globalThis.process.env };
+  const binary = ffmpegStaticPath as unknown as string | null;
+  if (binary && existsSync(binary)) {
+    env.PATH = `${dirname(binary)}${delimiter}${env.PATH ?? ''}`;
+  }
+  return env;
+}
+
 function run(python: string, args: string[]): Promise<void> {
   return new Promise((resolvePromise, reject) => {
-    const process = spawn(python, args, { windowsHide: true });
+    const process = spawn(python, args, { windowsHide: true, env: envWithFfmpeg() });
     let stderr = '';
     process.stderr.on('data', (chunk: Buffer) => {
       const text = chunk.toString();
