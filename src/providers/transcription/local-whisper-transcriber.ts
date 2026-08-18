@@ -17,7 +17,13 @@ function run(python: string, args: string[]): Promise<void> {
   return new Promise((resolvePromise, reject) => {
     const process = spawn(python, args, { windowsHide: true });
     let stderr = '';
-    process.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString(); });
+    process.stderr.on('data', (chunk: Buffer) => {
+      const text = chunk.toString();
+      stderr += text;
+      // The script logs its optional-stage progress (Demucs/WhisperX) to stderr.
+      // Forward it live so a silent WhisperX fallback is actually visible.
+      globalThis.process.stderr.write(text);
+    });
     process.on('error', () => reject(new Error('Local Whisper is not installed. Run scripts\\setup-local-whisper.ps1 first.')));
     process.on('close', (code) => code === 0 ? resolvePromise() : reject(new Error(`Local Whisper failed: ${stderr.slice(-1200)}`)));
   });
@@ -57,7 +63,9 @@ export function sanitizeSegments(segments: TranscriptSegment[]): TranscriptSegme
 /** Offline adapter for faster-whisper. It uses CUDA automatically when available. */
 export class LocalWhisperTranscriber implements AudioTranscriber {
   async transcribe(audioPath: string): Promise<TranscriptSegment[]> {
-    const python = existsSync('.venv/Scripts/python.exe') ? '.venv/Scripts/python.exe' : 'python';
+    const python = existsSync('.venv/Scripts/python.exe')
+      ? '.venv/Scripts/python.exe'
+      : existsSync('.venv/bin/python') ? '.venv/bin/python' : 'python';
     const directory = mkdtempSync(join(tmpdir(), 'lyric-video-whisper-'));
     const outputPath = join(directory, 'transcript.json');
     try {

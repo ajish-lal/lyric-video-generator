@@ -6,6 +6,7 @@
   "scripts": {
     "test": "vitest run",
     "dev": "tsx src/cli.ts",
+    "generate": "tsx scripts/generate.ts",
     "quick": "tsx scripts/quick-render.ts",
     "export:resolve": "tsx scripts/resolve/export-resolve.ts",
     "build": "tsc -p tsconfig.json",

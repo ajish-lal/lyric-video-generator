@@ -1,0 +1,28 @@
+{
+  "audio": "input/song.mp3",
+  "lyrics": "",
+  "output": "output/song.mp4",
+  "config": "output/song.json",
+  "render": true,
+
+  "template": "",
+
+  "resolution": { "width": 1920, "height": 1080, "fps": 30 },
+
+  "encoder": "cpu",
+
+  "transcription": {
+    "model": "small",
+    "separateVocals": true,
+    "wordAlign": true,
+    "demucsModel": "htdemucs"
+  },
+
+  "viz": {
+    "enabled": false,
+    "mode": "wave",
+    "position": "bottom",
+    "colors": ["#00e5ff"],
+    "reflection": false
+  }
+}
