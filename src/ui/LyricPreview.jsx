@@ -17,6 +17,7 @@ function readStyle(config) {
     animation: config?.typography?.animation || 'fade',
     baseFontPx: config?.typography?.fontSize || DEFAULT_FONT_PX,
     mode: config?.wordDisplay?.mode === 'cumulative' ? 'cumulative' : 'single-word',
+    spacing: Number(config?.wordDisplay?.spacing) >= 0 ? Number(config.wordDisplay.spacing) : 0.25,
   };
 }
 
@@ -97,7 +98,7 @@ export default function LyricPreview({ units, currentTime, config }) {
   if (style.mode === 'cumulative' && line) {
     const shown = line.words.filter((w) => currentTime >= w.start);
     content = (
-      <div className="preview-line" style={{ fontFamily: style.font }}>
+      <div className="preview-line" style={{ fontFamily: style.font, gap: `${style.spacing}em` }}>
         {shown.map((w) => renderWord(w, w === activeWord ? ' active' : ''))}
       </div>
     );

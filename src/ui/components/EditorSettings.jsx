@@ -15,7 +15,6 @@ export default function EditorSettings({ config, resPreset, globalFontSize, onRe
           }}
         >
           <option value="1920x1080">Landscape 1080p (1920×1080)</option>
-          <option value="1280x720">Landscape 720p (1280×720)</option>
           <option value="1080x1920">Vertical 9:16 (1080×1920)</option>
         </select>
       </label>

@@ -66,7 +66,7 @@ export class ProjectBuilder {
       },
       dynamicWordEffects: [
         {
-          name: 'sustained-vocal', minDuration: 0.7, fontFamily: 'Baskerville', color: '#d8f7ff',
+          name: 'sustained-vocal', minDuration: 0.7, fontFamily: 'Baskerville', color: '#eafcff',
           animation: { type: 'smog-fade', duration: 0.5, easing: 'easeOut', intensity: 0.7 },
         },
         {

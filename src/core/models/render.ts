@@ -53,6 +53,8 @@ export interface LyricAnimation {
 export interface WordDisplay {
   mode: WordDisplayMode;
   hold: WordDisplayHold;
+  /** Gap between words in cumulative mode, in em (preview) / spaces (render). Default 0.25. */
+  spacing?: number;
 }
 
 export interface DynamicWordEffect {

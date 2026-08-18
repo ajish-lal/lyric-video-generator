@@ -115,7 +115,11 @@ async function main(): Promise<void> {
     template,
     musicViz: buildViz(cfg.viz),
     wordDisplay: cfg.wordDisplay?.mode
-      ? { mode: cfg.wordDisplay.mode, hold: cfg.wordDisplay.hold ?? 'next-word' }
+      ? {
+          mode: cfg.wordDisplay.mode,
+          hold: cfg.wordDisplay.hold ?? 'next-word',
+          ...(cfg.wordDisplay.spacing !== undefined ? { spacing: cfg.wordDisplay.spacing } : {}),
+        }
       : undefined,
   });
 

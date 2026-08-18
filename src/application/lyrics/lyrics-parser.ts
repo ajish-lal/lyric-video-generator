@@ -4,7 +4,7 @@ import type { TranscriptSegment } from '../../core/interfaces/transcriber.js';
 function styleTranscribedWord(text: string, start: number, end: number) {
   const duration = end - start;
   if (duration >= 0.7) return {
-    text, start, end, fontFamily: 'Baskerville', color: '#d8f7ff',
+    text, start, end, fontFamily: 'Baskerville', color: '#eafcff',
     animation: { type: 'smog-fade' as const, duration: 0.5, easing: 'easeOut', intensity: 0.7 },
   };
   if (duration <= 0.28) return {

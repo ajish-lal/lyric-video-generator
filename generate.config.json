@@ -21,7 +21,8 @@
   },
   "wordDisplay": {
     "mode": "cumulative",
-    "hold": "next-word"
+    "hold": "next-word",
+    "spacing": 0.25
   },
   "viz": {
     "enabled": false,

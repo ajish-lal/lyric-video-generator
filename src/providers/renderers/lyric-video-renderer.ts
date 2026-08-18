@@ -259,6 +259,7 @@ export class LyricVideoRenderer implements Renderer {
     const hasAudio = Boolean(project.audioPath && existsSync(project.audioPath));
     const audioDuration = hasAudio ? await readMediaDuration(ffmpegPath, project.audioPath) : undefined;
     const rawDuration = Math.max(1, allLines.at(-1)?.end ?? 0, audioDuration ?? 0);
+    const wordGap = ' '.repeat(Math.max(1, Math.round((wordDisplay.spacing ?? 0.25) / 0.25)));
     const duration = options.maxDuration ? Math.min(rawDuration, options.maxDuration) : rawDuration;
     const y = config.style.lyricPosition === 'top' ? 'h*0.20' : config.style.lyricPosition === 'bottom' ? 'h*0.78' : 'h/2';
     const applyCase = (input: string) => {
@@ -308,7 +309,7 @@ export class LyricVideoRenderer implements Renderer {
             : word.end;
           const rawText = wordDisplay.mode === 'single-word'
             ? word.text
-            : line.words.slice(0, index + 1).map((item) => item.text).join(' ');
+            : line.words.slice(0, index + 1).map((item) => item.text).join(wordGap);
           const text = applyCase(rawText);
           return createTextFilter(
             text,
@@ -505,6 +506,7 @@ export class LyricVideoRenderer implements Renderer {
     // --- per-word drawtext ---
     const wordDisplay = config.wordDisplay ?? { mode: 'single-word' as const, hold: 'word-end' as const };
     const allLines = project.lyrics.sections.flatMap((section) => section.lines);
+    const wordGap = ' '.repeat(Math.max(1, Math.round((wordDisplay.spacing ?? 0.25) / 0.25)));
     const fallbackRender = (): ResolvedWordRender => ({
       fontFamily: config.style.fontFamily, fontSizePx: Math.round(H / 11), color: config.style.primaryColor,
       opacity: 1, xNorm: 0.5, yNorm: 0.5,
@@ -517,7 +519,7 @@ export class LyricVideoRenderer implements Renderer {
           const end = wordDisplay.hold === 'next-word' ? line.words[index + 1]?.start ?? line.end : word.end;
           const rawText = wordDisplay.mode === 'single-word'
             ? word.text
-            : line.words.slice(0, index + 1).map((item) => item.text).join(' ');
+            : line.words.slice(0, index + 1).map((item) => item.text).join(wordGap);
           draws.push(this.drawWord(word, applyCase(rawText), word.start, Math.max(word.start + 0.01, end), W, H, fallbackRender));
         });
       } else {
