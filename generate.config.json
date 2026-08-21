@@ -2,9 +2,9 @@
   "audio": "input/vocals.wav",
   "lyrics": "input/lyrics.txt",
   "output": "output/song.mp4",
-  "config": "output/test.config.json",
+  "config": "output/song.config.json",
   "render": false,
-  "template": "",
+  "template": "nu-metal",
   "resolution": {
     "width": 1080,
     "height": 1920,
@@ -12,18 +12,18 @@
   },
   "encoder": "cpu",
   "transcription": {
-    "model": "small",
+    "model": "medium",
     "separateVocals": false,
     "wordAlign": true,
     "demucsModel": "htdemucs",
     "leadSeconds": 0,
-    "holdSeconds": 0,
-    "interpolateWords": true
+    "holdSeconds": 1,
+    "interpolateWords": false
   },
   "wordDisplay": {
     "mode": "cumulative",
     "hold": "next-word",
-    "spacing": 0.25
+    "spacing": 0.5
   },
   "exportRange": {
     "start": 0,

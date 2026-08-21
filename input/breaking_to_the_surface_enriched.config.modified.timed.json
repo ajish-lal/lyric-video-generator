@@ -1,0 +1,2357 @@
+{
+  "title": "Breaking to the Surface",
+  "audio": "input/vocals.wav",
+  "theme": "dark",
+  "resolution": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "sections": [
+    {
+      "type": "verse",
+      "style": {
+        "preset": "nu_metal_verse",
+        "animation": "fade_up"
+      },
+      "lines": [
+        {
+          "text": "I fell far below the ground",
+          "start": 19.7,
+          "end": 25.39,
+          "words": [
+            {
+              "text": "I",
+              "start": 19.7,
+              "end": 19.88
+            },
+            {
+              "text": "fell",
+              "start": 19.88,
+              "end": 22.29,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "far",
+              "start": 22.29,
+              "end": 23.19,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "below",
+              "start": 23.19,
+              "end": 24.15,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "the",
+              "start": 24.15,
+              "end": 24.41
+            },
+            {
+              "text": "ground",
+              "start": 24.41,
+              "end": 25.39,
+              "style": {
+                "emphasis": "cold"
+              }
+            }
+          ]
+        },
+        {
+          "text": "With no way out to be found",
+          "start": 29.22,
+          "end": 36.9,
+          "words": [
+            {
+              "text": "With",
+              "start": 29.22,
+              "end": 29.52
+            },
+            {
+              "text": "no",
+              "start": 29.52,
+              "end": 30.14,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "way",
+              "start": 30.14,
+              "end": 32.47,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "out",
+              "start": 32.47,
+              "end": 33.15,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "to",
+              "start": 33.15,
+              "end": 33.75
+            },
+            {
+              "text": "be",
+              "start": 33.75,
+              "end": 34.01
+            },
+            {
+              "text": "found",
+              "start": 34.01,
+              "end": 36.9,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Lost somewhere before the dawn",
+          "start": 40.34,
+          "end": 45.37,
+          "words": [
+            {
+              "text": "Lost",
+              "start": 40.34,
+              "end": 40.88,
+              "style": {
+                "emphasis": "cold"
+              }
+            },
+            {
+              "text": "somewhere",
+              "start": 40.88,
+              "end": 42.41
+            },
+            {
+              "text": "before",
+              "start": 42.41,
+              "end": 43.37
+            },
+            {
+              "text": "the",
+              "start": 43.37,
+              "end": 43.91
+            },
+            {
+              "text": "dawn",
+              "start": 43.91,
+              "end": 45.37,
+              "style": {
+                "emphasis": "subtle"
+              }
+            }
+          ]
+        },
+        {
+          "text": "A flickering ember caught my eye",
+          "start": 48.48,
+          "end": 57.28,
+          "words": [
+            {
+              "text": "A",
+              "start": 48.48,
+              "end": 48.62
+            },
+            {
+              "text": "flickering",
+              "start": 48.62,
+              "end": 50.22,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "ember",
+              "start": 50.22,
+              "end": 52.35,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "caught",
+              "start": 52.35,
+              "end": 52.93
+            },
+            {
+              "text": "my",
+              "start": 52.93,
+              "end": 54.49
+            },
+            {
+              "text": "eye",
+              "start": 57,
+              "end": 57.28
+            }
+          ],
+          "style": {
+            "animation": "burn_in",
+            "emphasis": "strong"
+          }
+        }
+      ],
+      "start": 19.7,
+      "end": 57.28
+    },
+    {
+      "type": "pre-chorus",
+      "style": {
+        "preset": "dark_bridge",
+        "animation": "burn_in",
+        "fontSize": 84,
+        "emphasis": "emphasis"
+      },
+      "lines": [
+        {
+          "text": "And I felt it in my veins",
+          "start": 58.38,
+          "end": 60.69,
+          "words": [
+            {
+              "text": "And",
+              "start": 58.38,
+              "end": 58.74
+            },
+            {
+              "text": "I",
+              "start": 58.74,
+              "end": 58.95
+            },
+            {
+              "text": "felt",
+              "start": 58.95,
+              "end": 59.19
+            },
+            {
+              "text": "it",
+              "start": 59.19,
+              "end": 59.597
+            },
+            {
+              "text": "in",
+              "start": 59.597,
+              "end": 59.83
+            },
+            {
+              "text": "my",
+              "start": 59.83,
+              "end": 60.17
+            },
+            {
+              "text": "veins",
+              "start": 60.17,
+              "end": 60.69,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Something calling out my name",
+          "start": 60.69,
+          "end": 62.74,
+          "words": [
+            {
+              "text": "Something",
+              "start": 60.69,
+              "end": 61.31
+            },
+            {
+              "text": "calling",
+              "start": 61.31,
+              "end": 61.927,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "out",
+              "start": 61.927,
+              "end": 62.2,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "my",
+              "start": 62.2,
+              "end": 62.5
+            },
+            {
+              "text": "name",
+              "start": 62.5,
+              "end": 62.74,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Through the cracks I see the flame",
+          "start": 63.1,
+          "end": 65.423,
+          "words": [
+            {
+              "text": "Through",
+              "start": 63.1,
+              "end": 63.42
+            },
+            {
+              "text": "the",
+              "start": 63.42,
+              "end": 63.66
+            },
+            {
+              "text": "cracks",
+              "start": 63.66,
+              "end": 64.03,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "I",
+              "start": 64.03,
+              "end": 64.27
+            },
+            {
+              "text": "see",
+              "start": 64.27,
+              "end": 64.63
+            },
+            {
+              "text": "the",
+              "start": 64.63,
+              "end": 64.85
+            },
+            {
+              "text": "flame",
+              "start": 64.85,
+              "end": 65.423,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "I won't let it fade again",
+          "start": 65.423,
+          "end": 67.64,
+          "words": [
+            {
+              "text": "I",
+              "start": 65.423,
+              "end": 65.83
+            },
+            {
+              "text": "won't",
+              "start": 65.83,
+              "end": 66.09,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "let",
+              "start": 66.09,
+              "end": 66.433
+            },
+            {
+              "text": "it",
+              "start": 66.433,
+              "end": 66.72
+            },
+            {
+              "text": "fade",
+              "start": 66.72,
+              "end": 67.12,
+              "style": {
+                "emphasis": "cold"
+              }
+            },
+            {
+              "text": "again",
+              "start": 67.12,
+              "end": 67.64,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        }
+      ],
+      "start": 58.38,
+      "end": 67.64
+    },
+    {
+      "type": "chorus",
+      "style": {
+        "preset": "heavy_chorus",
+        "animation": "impact",
+        "fontSize": 92
+      },
+      "lines": [
+        {
+          "text": "All these years you thought I was hiding",
+          "start": 67.853,
+          "end": 74.83,
+          "words": [
+            {
+              "text": "All",
+              "start": 67.853,
+              "end": 69.12
+            },
+            {
+              "text": "these",
+              "start": 69.12,
+              "end": 70.25
+            },
+            {
+              "text": "years",
+              "start": 70.25,
+              "end": 71.23,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "you",
+              "start": 71.23,
+              "end": 71.53
+            },
+            {
+              "text": "thought",
+              "start": 71.53,
+              "end": 72.17
+            },
+            {
+              "text": "I",
+              "start": 72.17,
+              "end": 72.47
+            },
+            {
+              "text": "was",
+              "start": 72.47,
+              "end": 72.71
+            },
+            {
+              "text": "hiding",
+              "start": 72.71,
+              "end": 74.83,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Beneath the ground",
+          "start": 74.83,
+          "end": 77.78,
+          "words": [
+            {
+              "text": "Beneath",
+              "start": 74.83,
+              "end": 75.72,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "the",
+              "start": 75.72,
+              "end": 76.26
+            },
+            {
+              "text": "ground",
+              "start": 76.26,
+              "end": 77.78,
+              "style": {
+                "emphasis": "cold"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Now I'm breaking all the way",
+          "start": 78.127,
+          "end": 81.13,
+          "words": [
+            {
+              "text": "Now",
+              "start": 78.127,
+              "end": 78.38
+            },
+            {
+              "text": "I'm",
+              "start": 78.38,
+              "end": 78.66
+            },
+            {
+              "text": "breaking",
+              "start": 78.66,
+              "end": 79.38,
+              "style": {
+                "emphasis": "scream"
+              }
+            },
+            {
+              "text": "all",
+              "start": 79.38,
+              "end": 79.62
+            },
+            {
+              "text": "the",
+              "start": 79.62,
+              "end": 79.89
+            },
+            {
+              "text": "way",
+              "start": 79.89,
+              "end": 81.13,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ],
+          "style": {
+            "animation": "smash",
+            "emphasis": "scream"
+          }
+        },
+        {
+          "text": "Through to the surface",
+          "start": 81.13,
+          "end": 87.087,
+          "words": [
+            {
+              "text": "Through",
+              "start": 81.13,
+              "end": 81.71
+            },
+            {
+              "text": "to",
+              "start": 81.71,
+              "end": 81.957
+            },
+            {
+              "text": "the",
+              "start": 81.957,
+              "end": 82.236
+            },
+            {
+              "text": "surface",
+              "start": 82.236,
+              "end": 87.087,
+              "style": {
+                "emphasis": "shout"
+              }
+            }
+          ],
+          "style": {
+            "animation": "impact",
+            "emphasis": "shout"
+          }
+        }
+      ],
+      "start": 67.853,
+      "end": 87.087
+    },
+    {
+      "type": "verse",
+      "style": {
+        "preset": "nu_metal_verse",
+        "animation": "fade_up"
+      },
+      "lines": [
+        {
+          "text": "Chasing echoes in the haze",
+          "start": 98.26,
+          "end": 105.03,
+          "words": [
+            {
+              "text": "Chasing",
+              "start": 98.26,
+              "end": 99.24,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "echoes",
+              "start": 99.24,
+              "end": 100.56,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "in",
+              "start": 100.56,
+              "end": 100.9
+            },
+            {
+              "text": "the",
+              "start": 100.9,
+              "end": 101.22
+            },
+            {
+              "text": "haze",
+              "start": 101.22,
+              "end": 105.03,
+              "style": {
+                "emphasis": "cold"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Amid these storms I carried the weight",
+          "start": 106.31,
+          "end": 113.3,
+          "words": [
+            {
+              "text": "Amid",
+              "start": 106.31,
+              "end": 108.09
+            },
+            {
+              "text": "these",
+              "start": 108.09,
+              "end": 108.61
+            },
+            {
+              "text": "storms",
+              "start": 108.61,
+              "end": 109.74,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "I",
+              "start": 109.74,
+              "end": 109.92
+            },
+            {
+              "text": "carried",
+              "start": 109.92,
+              "end": 110.54
+            },
+            {
+              "text": "the",
+              "start": 110.54,
+              "end": 111.1
+            },
+            {
+              "text": "weight",
+              "start": 111.1,
+              "end": 113.3,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "I found my way beyond the dawn",
+          "start": 113.46,
+          "end": 120.71,
+          "words": [
+            {
+              "text": "I",
+              "start": 113.46,
+              "end": 115.58
+            },
+            {
+              "text": "found",
+              "start": 115.58,
+              "end": 117.73,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "my",
+              "start": 117.73,
+              "end": 118.33
+            },
+            {
+              "text": "way",
+              "start": 118.33,
+              "end": 119.23,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "beyond",
+              "start": 119.23,
+              "end": 119.89
+            },
+            {
+              "text": "the",
+              "start": 119.89,
+              "end": 120.15
+            },
+            {
+              "text": "dawn",
+              "start": 120.15,
+              "end": 120.71,
+              "style": {
+                "emphasis": "subtle"
+              }
+            }
+          ]
+        },
+        {
+          "text": "The flickering ember still remains",
+          "start": 120.71,
+          "end": 132.26,
+          "words": [
+            {
+              "text": "The",
+              "start": 120.71,
+              "end": 125.43
+            },
+            {
+              "text": "flickering",
+              "start": 125.43,
+              "end": 127.07,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "ember",
+              "start": 127.07,
+              "end": 129.08,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "still",
+              "start": 129.08,
+              "end": 129.8
+            },
+            {
+              "text": "remains",
+              "start": 129.8,
+              "end": 132.26
+            }
+          ],
+          "style": {
+            "animation": "burn_in",
+            "emphasis": "strong"
+          }
+        }
+      ],
+      "start": 98.26,
+      "end": 132.26
+    },
+    {
+      "type": "pre-chorus",
+      "style": {
+        "preset": "dark_bridge",
+        "animation": "burn_in",
+        "fontSize": 84,
+        "emphasis": "emphasis"
+      },
+      "lines": [
+        {
+          "text": "And I feel it burning in my veins",
+          "start": 134.84,
+          "end": 137.51,
+          "words": [
+            {
+              "text": "And",
+              "start": 134.84,
+              "end": 134.98
+            },
+            {
+              "text": "I",
+              "start": 134.98,
+              "end": 135.14
+            },
+            {
+              "text": "feel",
+              "start": 135.14,
+              "end": 135.48
+            },
+            {
+              "text": "it",
+              "start": 135.48,
+              "end": 135.73
+            },
+            {
+              "text": "burning",
+              "start": 135.73,
+              "end": 136.41,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "in",
+              "start": 136.41,
+              "end": 136.63
+            },
+            {
+              "text": "my",
+              "start": 136.63,
+              "end": 136.93
+            },
+            {
+              "text": "veins",
+              "start": 136.93,
+              "end": 137.51,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Something screaming out my name",
+          "start": 137.51,
+          "end": 139.58,
+          "words": [
+            {
+              "text": "Something",
+              "start": 137.51,
+              "end": 138.03
+            },
+            {
+              "text": "screaming",
+              "start": 138.03,
+              "end": 138.82,
+              "style": {
+                "emphasis": "scream"
+              }
+            },
+            {
+              "text": "out",
+              "start": 138.82,
+              "end": 139.04,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "my",
+              "start": 139.04,
+              "end": 139.34
+            },
+            {
+              "text": "name",
+              "start": 139.34,
+              "end": 139.58,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Through the cracks it found a way",
+          "start": 139.9,
+          "end": 142.41,
+          "words": [
+            {
+              "text": "Through",
+              "start": 139.9,
+              "end": 140.22
+            },
+            {
+              "text": "the",
+              "start": 140.22,
+              "end": 140.48
+            },
+            {
+              "text": "cracks",
+              "start": 140.48,
+              "end": 140.91,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "it",
+              "start": 140.91,
+              "end": 141.09
+            },
+            {
+              "text": "found",
+              "start": 141.09,
+              "end": 141.53,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "a",
+              "start": 141.53,
+              "end": 141.69
+            },
+            {
+              "text": "way",
+              "start": 141.69,
+              "end": 142.41,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        },
+        {
+          "text": "I'll never let it fade again",
+          "start": 142.41,
+          "end": 144.46,
+          "words": [
+            {
+              "text": "I'll",
+              "start": 142.41,
+              "end": 142.61
+            },
+            {
+              "text": "never",
+              "start": 142.61,
+              "end": 142.93,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "let",
+              "start": 142.93,
+              "end": 143.38
+            },
+            {
+              "text": "it",
+              "start": 143.38,
+              "end": 143.54
+            },
+            {
+              "text": "fade",
+              "start": 143.54,
+              "end": 143.94,
+              "style": {
+                "emphasis": "cold"
+              }
+            },
+            {
+              "text": "again",
+              "start": 143.94,
+              "end": 144.46,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        }
+      ],
+      "start": 134.84,
+      "end": 144.46
+    },
+    {
+      "type": "chorus",
+      "style": {
+        "preset": "heavy_chorus",
+        "animation": "punch_in",
+        "fontSize": 94
+      },
+      "lines": [
+        {
+          "text": "All these years you thought I was hiding",
+          "start": 145.58,
+          "end": 151.07,
+          "words": [
+            {
+              "text": "All",
+              "start": 145.58,
+              "end": 145.92
+            },
+            {
+              "text": "these",
+              "start": 145.92,
+              "end": 147.04
+            },
+            {
+              "text": "years",
+              "start": 147.04,
+              "end": 148.03,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "you",
+              "start": 148.03,
+              "end": 148.33
+            },
+            {
+              "text": "thought",
+              "start": 148.33,
+              "end": 148.97
+            },
+            {
+              "text": "I",
+              "start": 148.97,
+              "end": 149.25
+            },
+            {
+              "text": "was",
+              "start": 149.25,
+              "end": 149.51
+            },
+            {
+              "text": "hiding",
+              "start": 149.51,
+              "end": 151.07,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Beneath the ground",
+          "start": 151.07,
+          "end": 152.96,
+          "words": [
+            {
+              "text": "Beneath",
+              "start": 151.07,
+              "end": 151.91,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "the",
+              "start": 151.91,
+              "end": 152.52
+            },
+            {
+              "text": "ground",
+              "start": 152.52,
+              "end": 152.96,
+              "style": {
+                "emphasis": "cold"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Now I'm breaking all the way",
+          "start": 155.18,
+          "end": 157.93,
+          "words": [
+            {
+              "text": "Now",
+              "start": 155.18,
+              "end": 155.46
+            },
+            {
+              "text": "I'm",
+              "start": 155.46,
+              "end": 155.51
+            },
+            {
+              "text": "breaking",
+              "start": 155.47,
+              "end": 156.29,
+              "style": {
+                "emphasis": "scream"
+              }
+            },
+            {
+              "text": "all",
+              "start": 156.29,
+              "end": 156.41
+            },
+            {
+              "text": "the",
+              "start": 156.41,
+              "end": 156.69
+            },
+            {
+              "text": "way",
+              "start": 156.69,
+              "end": 157.93,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ],
+          "style": {
+            "animation": "smash",
+            "emphasis": "scream"
+          }
+        },
+        {
+          "text": "Through to the surface",
+          "start": 157.93,
+          "end": 159.62,
+          "words": [
+            {
+              "text": "Through",
+              "start": 157.93,
+              "end": 158.49
+            },
+            {
+              "text": "to",
+              "start": 158.49,
+              "end": 158.85
+            },
+            {
+              "text": "the",
+              "start": 158.85,
+              "end": 159.07
+            },
+            {
+              "text": "surface",
+              "start": 159.07,
+              "end": 159.62,
+              "style": {
+                "emphasis": "shout"
+              }
+            }
+          ],
+          "style": {
+            "animation": "impact",
+            "emphasis": "shout"
+          }
+        }
+      ],
+      "start": 145.58,
+      "end": 159.62
+    },
+    {
+      "type": "verse",
+      "style": {
+        "preset": "nu_metal_verse",
+        "animation": "fade_up"
+      },
+      "lines": [
+        {
+          "text": "You thought that this was over?",
+          "start": 164.18,
+          "end": 166.57,
+          "words": [
+            {
+              "text": "You",
+              "start": 164.18,
+              "end": 164.44
+            },
+            {
+              "text": "thought",
+              "start": 164.44,
+              "end": 164.78
+            },
+            {
+              "text": "that",
+              "start": 164.78,
+              "end": 165.04
+            },
+            {
+              "text": "this",
+              "start": 165.04,
+              "end": 165.35
+            },
+            {
+              "text": "was",
+              "start": 165.35,
+              "end": 165.81
+            },
+            {
+              "text": "over?",
+              "start": 165.81,
+              "end": 166.57,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "You thought I'd fade away?",
+          "start": 166.57,
+          "end": 168.26,
+          "words": [
+            {
+              "text": "You",
+              "start": 166.57,
+              "end": 166.87
+            },
+            {
+              "text": "thought",
+              "start": 166.87,
+              "end": 167.29
+            },
+            {
+              "text": "I'd",
+              "start": 167.29,
+              "end": 167.5
+            },
+            {
+              "text": "fade",
+              "start": 167.5,
+              "end": 167.92,
+              "style": {
+                "emphasis": "cold"
+              }
+            },
+            {
+              "text": "away?",
+              "start": 167.92,
+              "end": 168.26,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Every voice that tried to break me",
+          "start": 169.08,
+          "end": 170.96,
+          "words": [
+            {
+              "text": "Every",
+              "start": 169.08,
+              "end": 169.35
+            },
+            {
+              "text": "voice",
+              "start": 169.35,
+              "end": 169.65,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "that",
+              "start": 169.65,
+              "end": 169.93
+            },
+            {
+              "text": "tried",
+              "start": 169.93,
+              "end": 170.29
+            },
+            {
+              "text": "to",
+              "start": 170.29,
+              "end": 170.51
+            },
+            {
+              "text": "break",
+              "start": 170.51,
+              "end": 170.86,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "me",
+              "start": 170.86,
+              "end": 170.96,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Only fed the flame inside me",
+          "start": 171.48,
+          "end": 173.36,
+          "words": [
+            {
+              "text": "Only",
+              "start": 171.48,
+              "end": 171.7
+            },
+            {
+              "text": "fed",
+              "start": 171.7,
+              "end": 172.09
+            },
+            {
+              "text": "the",
+              "start": 172.09,
+              "end": 172.27
+            },
+            {
+              "text": "flame",
+              "start": 172.27,
+              "end": 172.65,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "inside",
+              "start": 172.65,
+              "end": 173.2
+            },
+            {
+              "text": "me",
+              "start": 173.2,
+              "end": 173.36,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Left in the dark, forgotten, thrown away",
+          "start": 173.5,
+          "end": 175.72,
+          "words": [
+            {
+              "text": "Left",
+              "start": 173.5,
+              "end": 173.86
+            },
+            {
+              "text": "in",
+              "start": 173.86,
+              "end": 173.99
+            },
+            {
+              "text": "the",
+              "start": 173.99,
+              "end": 174.11
+            },
+            {
+              "text": "dark,",
+              "start": 174.11,
+              "end": 174.43,
+              "style": {
+                "emphasis": "cold"
+              }
+            },
+            {
+              "text": "forgotten,",
+              "start": 174.43,
+              "end": 175.03,
+              "style": {
+                "emphasis": "cold"
+              }
+            },
+            {
+              "text": "thrown",
+              "start": 175.03,
+              "end": 175.42,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "away",
+              "start": 175.42,
+              "end": 175.72
+            }
+          ]
+        },
+        {
+          "text": "Yet somehow the seed kept finding its way",
+          "start": 175.78,
+          "end": 177.9,
+          "words": [
+            {
+              "text": "Yet",
+              "start": 175.78,
+              "end": 175.92
+            },
+            {
+              "text": "somehow",
+              "start": 175.92,
+              "end": 176.39
+            },
+            {
+              "text": "the",
+              "start": 176.39,
+              "end": 176.51
+            },
+            {
+              "text": "seed",
+              "start": 176.51,
+              "end": 176.79,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "kept",
+              "start": 176.79,
+              "end": 177.09
+            },
+            {
+              "text": "finding",
+              "start": 177.09,
+              "end": 177.5
+            },
+            {
+              "text": "its",
+              "start": 177.5,
+              "end": 177.68
+            },
+            {
+              "text": "way",
+              "start": 177.68,
+              "end": 177.9,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ]
+        },
+        {
+          "text": "The roots ran deeper in the pouring rain",
+          "start": 178.2,
+          "end": 180.26,
+          "words": [
+            {
+              "text": "The",
+              "start": 178.2,
+              "end": 178.34
+            },
+            {
+              "text": "roots",
+              "start": 178.34,
+              "end": 178.67,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "ran",
+              "start": 178.67,
+              "end": 178.91
+            },
+            {
+              "text": "deeper",
+              "start": 178.91,
+              "end": 179.29,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "in",
+              "start": 179.29,
+              "end": 179.39
+            },
+            {
+              "text": "the",
+              "start": 179.39,
+              "end": 179.51
+            },
+            {
+              "text": "pouring",
+              "start": 179.51,
+              "end": 180.02
+            },
+            {
+              "text": "rain",
+              "start": 180.02,
+              "end": 180.26,
+              "style": {
+                "emphasis": "subtle"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Drawing all my strength from the pressure and the pain",
+          "start": 180.4,
+          "end": 182.72,
+          "words": [
+            {
+              "text": "Drawing",
+              "start": 180.4,
+              "end": 180.97
+            },
+            {
+              "text": "all",
+              "start": 180.97,
+              "end": 181.13
+            },
+            {
+              "text": "my",
+              "start": 181.13,
+              "end": 181.29
+            },
+            {
+              "text": "strength",
+              "start": 181.29,
+              "end": 181.59,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "from",
+              "start": 181.59,
+              "end": 181.77
+            },
+            {
+              "text": "the",
+              "start": 181.77,
+              "end": 181.89
+            },
+            {
+              "text": "pressure",
+              "start": 181.89,
+              "end": 182.28,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "and",
+              "start": 182.28,
+              "end": 182.38
+            },
+            {
+              "text": "the",
+              "start": 182.38,
+              "end": 182.5
+            },
+            {
+              "text": "pain",
+              "start": 182.5,
+              "end": 182.72,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "I pushed against the dirt that held me down",
+          "start": 183.04,
+          "end": 185.18,
+          "words": [
+            {
+              "text": "I",
+              "start": 183.04,
+              "end": 183.14
+            },
+            {
+              "text": "pushed",
+              "start": 183.14,
+              "end": 183.49,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "against",
+              "start": 183.49,
+              "end": 183.87
+            },
+            {
+              "text": "the",
+              "start": 183.87,
+              "end": 184.01
+            },
+            {
+              "text": "dirt",
+              "start": 184.01,
+              "end": 184.31,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "that",
+              "start": 184.31,
+              "end": 184.49
+            },
+            {
+              "text": "held",
+              "start": 184.49,
+              "end": 184.76,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "me",
+              "start": 184.76,
+              "end": 184.94,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "down",
+              "start": 184.94,
+              "end": 185.18,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "To reach above the dark that kept me bound",
+          "start": 185.46,
+          "end": 187.56,
+          "words": [
+            {
+              "text": "To",
+              "start": 185.46,
+              "end": 185.52
+            },
+            {
+              "text": "reach",
+              "start": 185.52,
+              "end": 185.84,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "above",
+              "start": 185.84,
+              "end": 186.23,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "the",
+              "start": 186.23,
+              "end": 186.37
+            },
+            {
+              "text": "dark",
+              "start": 186.37,
+              "end": 186.69
+            },
+            {
+              "text": "that",
+              "start": 186.69,
+              "end": 186.83
+            },
+            {
+              "text": "kept",
+              "start": 186.83,
+              "end": 187.14
+            },
+            {
+              "text": "me",
+              "start": 187.14,
+              "end": 187.28,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "bound",
+              "start": 187.28,
+              "end": 187.56,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "And all along, my hope refused to drown",
+          "start": 187.82,
+          "end": 189.96,
+          "words": [
+            {
+              "text": "And",
+              "start": 187.82,
+              "end": 188
+            },
+            {
+              "text": "all",
+              "start": 188,
+              "end": 188.27
+            },
+            {
+              "text": "along,",
+              "start": 188.27,
+              "end": 188.65
+            },
+            {
+              "text": "my",
+              "start": 188.65,
+              "end": 188.87
+            },
+            {
+              "text": "hope",
+              "start": 188.87,
+              "end": 189.13,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "refused",
+              "start": 189.13,
+              "end": 189.58,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "to",
+              "start": 189.58,
+              "end": 189.7
+            },
+            {
+              "text": "drown",
+              "start": 189.7,
+              "end": 189.96,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "'Cause the ember in my heart was still alive",
+          "start": 190,
+          "end": 192.4,
+          "words": [
+            {
+              "text": "'Cause",
+              "start": 190,
+              "end": 190.18
+            },
+            {
+              "text": "the",
+              "start": 190.18,
+              "end": 190.36
+            },
+            {
+              "text": "ember",
+              "start": 190.36,
+              "end": 190.69,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "in",
+              "start": 190.69,
+              "end": 190.77
+            },
+            {
+              "text": "my",
+              "start": 190.77,
+              "end": 190.95
+            },
+            {
+              "text": "heart",
+              "start": 190.95,
+              "end": 191.23,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "was",
+              "start": 191.23,
+              "end": 191.45
+            },
+            {
+              "text": "still",
+              "start": 191.45,
+              "end": 191.87
+            },
+            {
+              "text": "alive",
+              "start": 191.87,
+              "end": 192.4,
+              "style": {
+                "emphasis": "shout"
+              }
+            }
+          ],
+          "style": {
+            "animation": "burn_in",
+            "emphasis": "strong"
+          }
+        }
+      ],
+      "start": 164.18,
+      "end": 192.4
+    },
+    {
+      "type": "bridge",
+      "style": {
+        "preset": "dark_bridge",
+        "animation": "burn_in",
+        "fontSize": 88
+      },
+      "lines": [
+        {
+          "text": "Now I see it in the distance",
+          "start": 193.28,
+          "end": 196.33,
+          "words": [
+            {
+              "text": "Now",
+              "start": 193.28,
+              "end": 193.74
+            },
+            {
+              "text": "I",
+              "start": 193.74,
+              "end": 193.9
+            },
+            {
+              "text": "see",
+              "start": 193.9,
+              "end": 193.95
+            },
+            {
+              "text": "it",
+              "start": 193.91,
+              "end": 194.56
+            },
+            {
+              "text": "in",
+              "start": 194.56,
+              "end": 194.82
+            },
+            {
+              "text": "the",
+              "start": 194.82,
+              "end": 195.11
+            },
+            {
+              "text": "distance",
+              "start": 195.11,
+              "end": 196.33,
+              "style": {
+                "emphasis": "subtle"
+              }
+            }
+          ],
+          "style": {
+            "animation": "fade_up"
+          }
+        },
+        {
+          "text": "Burning brighter than ever before",
+          "start": 196.33,
+          "end": 201.12,
+          "words": [
+            {
+              "text": "Burning",
+              "start": 196.33,
+              "end": 197.53,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "brighter",
+              "start": 197.53,
+              "end": 199.31,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "than",
+              "start": 199.31,
+              "end": 200.1
+            },
+            {
+              "text": "ever",
+              "start": 200.1,
+              "end": 200.56
+            },
+            {
+              "text": "before",
+              "start": 200.56,
+              "end": 201.12
+            }
+          ],
+          "style": {
+            "animation": "fade_up"
+          }
+        },
+        {
+          "text": "What was buried once",
+          "start": 202.94,
+          "end": 205.33,
+          "words": [
+            {
+              "text": "What",
+              "start": 202.94,
+              "end": 203.2
+            },
+            {
+              "text": "was",
+              "start": 203.2,
+              "end": 203.42
+            },
+            {
+              "text": "buried",
+              "start": 203.42,
+              "end": 204.83,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "once",
+              "start": 204.83,
+              "end": 205.33
+            }
+          ],
+          "style": {
+            "animation": "fade_up"
+          }
+        },
+        {
+          "text": "Won't stay there anymore",
+          "start": 205.33,
+          "end": 208.47,
+          "words": [
+            {
+              "text": "Won't",
+              "start": 205.33,
+              "end": 205.87,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "stay",
+              "start": 205.87,
+              "end": 206.53,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            },
+            {
+              "text": "there",
+              "start": 206.53,
+              "end": 207.25
+            },
+            {
+              "text": "anymore",
+              "start": 207.25,
+              "end": 208.47,
+              "style": {
+                "emphasis": "shout"
+              }
+            }
+          ],
+          "style": {
+            "animation": "rage",
+            "emphasis": "shout"
+          }
+        }
+      ],
+      "start": 193.28,
+      "end": 208.47
+    },
+    {
+      "type": "chorus",
+      "style": {
+        "preset": "final_chorus",
+        "animation": "smash",
+        "fontSize": 102
+      },
+      "lines": [
+        {
+          "text": "All these years you thought I was hiding",
+          "start": 212.78,
+          "end": 218.83,
+          "words": [
+            {
+              "text": "All",
+              "start": 212.78,
+              "end": 213.12
+            },
+            {
+              "text": "these",
+              "start": 213.12,
+              "end": 214.25
+            },
+            {
+              "text": "years",
+              "start": 214.25,
+              "end": 215.23,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "you",
+              "start": 215.23,
+              "end": 215.53
+            },
+            {
+              "text": "thought",
+              "start": 215.53,
+              "end": 216.17
+            },
+            {
+              "text": "I",
+              "start": 216.17,
+              "end": 216.47
+            },
+            {
+              "text": "was",
+              "start": 216.47,
+              "end": 217.71
+            },
+            {
+              "text": "hiding",
+              "start": 217.71,
+              "end": 218.83,
+              "style": {
+                "emphasis": "strong"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Beneath the ground",
+          "start": 218.83,
+          "end": 220.18,
+          "words": [
+            {
+              "text": "Beneath",
+              "start": 218.83,
+              "end": 219.72,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "the",
+              "start": 219.72,
+              "end": 219.88
+            },
+            {
+              "text": "ground",
+              "start": 219.88,
+              "end": 220.18,
+              "style": {
+                "emphasis": "cold"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Now I'm breaking all the way",
+          "start": 221.72,
+          "end": 225.13,
+          "words": [
+            {
+              "text": "Now",
+              "start": 221.72,
+              "end": 222.66
+            },
+            {
+              "text": "I'm",
+              "start": 222.66,
+              "end": 222.71
+            },
+            {
+              "text": "breaking",
+              "start": 222.67,
+              "end": 223.4,
+              "style": {
+                "emphasis": "scream"
+              }
+            },
+            {
+              "text": "all",
+              "start": 223.4,
+              "end": 223.6
+            },
+            {
+              "text": "the",
+              "start": 223.6,
+              "end": 223.91
+            },
+            {
+              "text": "way",
+              "start": 223.91,
+              "end": 225.13,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ],
+          "style": {
+            "animation": "smash",
+            "emphasis": "scream"
+          }
+        },
+        {
+          "text": "Through to the surface",
+          "start": 225.13,
+          "end": 227.75,
+          "words": [
+            {
+              "text": "Through",
+              "start": 225.13,
+              "end": 225.69
+            },
+            {
+              "text": "to",
+              "start": 225.69,
+              "end": 226.03
+            },
+            {
+              "text": "the",
+              "start": 226.03,
+              "end": 226.29
+            },
+            {
+              "text": "surface",
+              "start": 226.29,
+              "end": 227.75,
+              "style": {
+                "emphasis": "shout"
+              }
+            }
+          ],
+          "style": {
+            "animation": "impact",
+            "emphasis": "shout"
+          }
+        },
+        {
+          "text": "All these years I've been fighting",
+          "start": 232.04,
+          "end": 238.03,
+          "words": [
+            {
+              "text": "All",
+              "start": 232.04,
+              "end": 232.32
+            },
+            {
+              "text": "these",
+              "start": 232.32,
+              "end": 233.47
+            },
+            {
+              "text": "years",
+              "start": 233.47,
+              "end": 234.97,
+              "style": {
+                "emphasis": "subtle"
+              }
+            },
+            {
+              "text": "I've",
+              "start": 234.97,
+              "end": 235.29
+            },
+            {
+              "text": "been",
+              "start": 235.29,
+              "end": 235.87
+            },
+            {
+              "text": "fighting",
+              "start": 235.87,
+              "end": 238.03,
+              "style": {
+                "emphasis": "scream"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Beneath the ground",
+          "start": 238.03,
+          "end": 241.02,
+          "words": [
+            {
+              "text": "Beneath",
+              "start": 238.03,
+              "end": 238.94,
+              "style": {
+                "emphasis": "strong"
+              }
+            },
+            {
+              "text": "the",
+              "start": 238.94,
+              "end": 239.5
+            },
+            {
+              "text": "ground",
+              "start": 239.5,
+              "end": 241.02,
+              "style": {
+                "emphasis": "cold"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Now I'm breaking all the way",
+          "start": 241.58,
+          "end": 244.33,
+          "words": [
+            {
+              "text": "Now",
+              "start": 241.58,
+              "end": 241.86
+            },
+            {
+              "text": "I'm",
+              "start": 241.86,
+              "end": 241.91
+            },
+            {
+              "text": "breaking",
+              "start": 241.87,
+              "end": 242.71,
+              "style": {
+                "emphasis": "scream"
+              }
+            },
+            {
+              "text": "all",
+              "start": 242.71,
+              "end": 242.83
+            },
+            {
+              "text": "the",
+              "start": 242.83,
+              "end": 243.09
+            },
+            {
+              "text": "way",
+              "start": 243.09,
+              "end": 244.33,
+              "style": {
+                "emphasis": "emphasis"
+              }
+            }
+          ],
+          "style": {
+            "animation": "smash",
+            "emphasis": "scream"
+          }
+        },
+        {
+          "text": "Through to the surface",
+          "start": 244.33,
+          "end": 247.04,
+          "words": [
+            {
+              "text": "Through",
+              "start": 244.33,
+              "end": 244.89
+            },
+            {
+              "text": "to",
+              "start": 244.89,
+              "end": 245.25
+            },
+            {
+              "text": "the",
+              "start": 245.25,
+              "end": 245.48
+            },
+            {
+              "text": "surface",
+              "start": 245.48,
+              "end": 247.04,
+              "style": {
+                "emphasis": "shout"
+              }
+            }
+          ],
+          "style": {
+            "animation": "impact",
+            "emphasis": "shout"
+          }
+        }
+      ],
+      "start": 212.78,
+      "end": 247.04
+    }
+  ],
+  "wordDisplay": {
+    "mode": "single-word",
+    "hold": "next-word",
+    "spacing": 0.5
+  },
+  "exportRange": {
+    "start": 57.268,
+    "end": 92.606
+  },
+  "background": {
+    "preset": "dark_grain",
+    "opacity": 1
+  },
+  "effects": {
+    "bloom": 0.18,
+    "grain": 0.22,
+    "vignette": 0.38,
+    "contrast": 1.08,
+    "saturation": 0.92,
+    "pushIn": 0.025,
+    "chromaticAberration": 0.035,
+    "glitch": 0.025,
+    "temperature": -0.08
+  },
+  "typography": {
+    "fontSize": 160,
+    "fontWeight": 650,
+    "color": "#F2F2F2",
+    "opacity": 0.96,
+    "shadow": 0.45
+  },
+  "animation": "fade_up",
+  "wordStyles": {
+    "ground": "cold",
+    "ember": "strong",
+    "flame": "strong",
+    "breaking": "scream",
+    "surface": "shout",
+    "burning": "strong",
+    "screaming": "scream",
+    "seed": "strong",
+    "roots": "strong",
+    "pain": "strong",
+    "hope": "strong",
+    "alive": "shout",
+    "fighting": "scream"
+  }
+}
