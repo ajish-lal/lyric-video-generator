@@ -137,6 +137,70 @@ function fitFontSize(fontSizePx: number, displayText: string, width: number): nu
 }
 
 /**
+ * Greedily wrap a list of words into lines that each fit within ~86% of the
+ * frame width at a *constant* font size. Used by cumulative mode so the text
+ * keeps a fixed size and overflowing words drop to the next line instead of
+ * shrinking the whole line to fit.
+ */
+function wrapWords(words: string[], fontSizePx: number, width: number, glyphAspect = 0.62): string[] {
+  const maxChars = Math.max(1, Math.floor((width * 0.86) / (fontSizePx * glyphAspect)));
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [''];
+}
+
+/** Normalized export sub-range, or undefined when the whole timeline is exported. */
+interface ExportTrim {
+  start: number;
+  end: number;
+}
+
+/** Resolve a config export range into a concrete, validated trim window. */
+function resolveExportTrim(
+  exportRange: { start?: number; end?: number } | undefined,
+  fullDuration: number,
+): ExportTrim | undefined {
+  if (!exportRange) return undefined;
+  const start = Math.max(0, exportRange.start ?? 0);
+  const end = exportRange.end != null ? Math.min(exportRange.end, fullDuration) : fullDuration;
+  if (!(end > start)) return undefined;
+  if (start <= 0 && end >= fullDuration) return undefined;
+  return { start, end };
+}
+
+/**
+ * Append trim/atrim nodes so the graph outputs only [trim.start, trim.end] with
+ * timestamps reset to zero. Returns the updated map args. Drawtext `enable`
+ * windows keep their original absolute times because trimming happens last.
+ */
+function buildExportTrimNodes(
+  trim: ExportTrim,
+  videoLabel: string,
+  audioRef: string | undefined,
+): { nodes: string[]; videoMap: string[]; audioMap: string[] } {
+  const s = trim.start.toFixed(3);
+  const e = trim.end.toFixed(3);
+  const nodes = [`[${videoLabel}]trim=start=${s}:end=${e},setpts=PTS-STARTPTS[vexp]`];
+  const videoMap = ['-map', '[vexp]'];
+  let audioMap: string[] = [];
+  if (audioRef) {
+    nodes.push(`[${audioRef}]atrim=start=${s}:end=${e},asetpts=PTS-STARTPTS[aexp]`);
+    audioMap = ['-map', '[aexp]'];
+  }
+  return { nodes, videoMap, audioMap };
+}
+
+/**
  * Resolves a grunge/scratch texture image used to carve the letters. Drop any
  * grayscale texture (white = keep, black = carve) at `assets/grunge-texture.png`
  * or point `TEXTURE_FILE` at one to swap the look without touching code.
@@ -259,8 +323,11 @@ export class LyricVideoRenderer implements Renderer {
     const hasAudio = Boolean(project.audioPath && existsSync(project.audioPath));
     const audioDuration = hasAudio ? await readMediaDuration(ffmpegPath, project.audioPath) : undefined;
     const rawDuration = Math.max(1, allLines.at(-1)?.end ?? 0, audioDuration ?? 0);
-    const wordGap = ' '.repeat(Math.max(1, Math.round((wordDisplay.spacing ?? 0.25) / 0.25)));
-    const duration = options.maxDuration ? Math.min(rawDuration, options.maxDuration) : rawDuration;
+    const timelineDuration = options.maxDuration ? Math.min(rawDuration, options.maxDuration) : rawDuration;
+    const exportTrim = resolveExportTrim(config.exportRange, timelineDuration);
+    // Process frames across the full timeline; a trim (below) cuts the segment.
+    const duration = exportTrim ? exportTrim.end : timelineDuration;
+    const outputDuration = exportTrim ? exportTrim.end - exportTrim.start : timelineDuration;
     const y = config.style.lyricPosition === 'top' ? 'h*0.20' : config.style.lyricPosition === 'bottom' ? 'h*0.78' : 'h/2';
     const applyCase = (input: string) => {
       const mode = config.style?.textCase ?? 'original';
@@ -274,7 +341,7 @@ export class LyricVideoRenderer implements Renderer {
     // Customized path: draw each word directly with its own colour/size/effects.
     // Kept entirely separate so the default look is byte-for-byte unchanged.
     if (config.customized) {
-      return this.renderCustomized({ ffmpegPath, outputPath, project, duration, hasAudio, applyCase });
+      return this.renderCustomized({ ffmpegPath, outputPath, project, duration, outputDuration, exportTrim, hasAudio, applyCase });
     }
 
     const createTextFilter = (text: string, start: number, end: number, fade = false, effect?: Project['lyrics']['sections'][number]['lines'][number]['words'][number]) => {
@@ -301,16 +368,37 @@ export class LyricVideoRenderer implements Renderer {
       // White glyphs only: the drop shadow and carved grunge texture are composited later.
       return `drawtext=text='${safeText}':${font}:fontcolor=white:fontsize=${fontSize}:x=${x}:y=${wordY}:alpha='${alpha}':enable='between(t,${formattedStart},${formattedEnd})'`;
     };
+    // Cumulative mode: constant font size, wrapping onto new lines when a line
+    // no longer fits the frame width (instead of shrinking the whole line).
+    const cumulativeFontSize = Math.max(1, Math.round(config.height / 12));
+    const buildCumulativeDraws = (words: string[], start: number, end: number): string => {
+      const wrapped = wrapWords(words, cumulativeFontSize, config.width);
+      const lineHeight = Math.round(cumulativeFontSize * 1.25);
+      const center = (wrapped.length - 1) / 2;
+      const font = fontToken(config.style.fontFamily);
+      const s = start.toFixed(3);
+      const e = end.toFixed(3);
+      const alpha = `min(1,(t-${s})/0.12)`;
+      return wrapped
+        .map((lineText, i) => {
+          const safeText = escapeFilterValue(lineText);
+          const offset = Math.round((i - center) * lineHeight);
+          const wordY = `${y}${offset >= 0 ? '+' : '-'}${Math.abs(offset)}-text_h/2`;
+          return `drawtext=text='${safeText}':${font}:fontcolor=white:fontsize=${cumulativeFontSize}:x=(w-text_w)/2:y=${wordY}:alpha='${alpha}':enable='between(t,${s},${e})'`;
+        })
+        .join(',');
+    };
     const filters = allLines.flatMap((line) => {
       if (config.lyricAnimation.type === 'word-by-word' && line.words.length > 0) {
         return line.words.map((word, index) => {
           const end = wordDisplay.hold === 'next-word'
             ? line.words[index + 1]?.start ?? line.end
             : word.end;
-          const rawText = wordDisplay.mode === 'single-word'
-            ? word.text
-            : line.words.slice(0, index + 1).map((item) => item.text).join(wordGap);
-          const text = applyCase(rawText);
+          if (wordDisplay.mode === 'cumulative') {
+            const words = line.words.slice(0, index + 1).map((item) => applyCase(item.text));
+            return buildCumulativeDraws(words, word.start, Math.max(word.start + 0.01, end));
+          }
+          const text = applyCase(word.text);
           return createTextFilter(
             text,
             word.start,
@@ -402,16 +490,26 @@ export class LyricVideoRenderer implements Renderer {
       `[graded]zoompan=z='min(1.0+0.06*on/${totalFrames},1.06)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${size}:fps=${fps}[${finalVideoLabel}]`,
     ];
     let audioMap: string[] = audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`] : [];
+    let vizAudioLabel: string | undefined;
     if (viz && audioIndex !== undefined) {
       const vizNodes = buildMusicVizNodes({ audioInputIndex: audioIndex, width: W, height: H, fps, viz, baseLabel: 'basev', outLabel: 'outv' });
       complexParts.push(...vizNodes.nodes);
+      vizAudioLabel = vizNodes.audioOutLabel;
       audioMap = ['-map', `[${vizNodes.audioOutLabel}]`];
+    }
+    let videoMap = ['-map', '[outv]'];
+    if (exportTrim) {
+      const audioRef = audioIndex === undefined ? undefined : (vizAudioLabel ?? `${audioIndex}:a:0`);
+      const trimNodes = buildExportTrimNodes(exportTrim, 'outv', audioRef);
+      complexParts.push(...trimNodes.nodes);
+      videoMap = trimNodes.videoMap;
+      audioMap = trimNodes.audioMap;
     }
     const complex = complexParts.join(';');
     await runWithFilterComplex(ffmpegPath, inputArgs, complex, [
-      '-map', '[outv]',
+      ...videoMap,
       ...(audioIndex !== undefined ? [...audioMap, '-c:a', 'aac', '-b:a', '192k'] : []),
-      '-t', String(duration),
+      '-t', String(outputDuration),
       ...videoEncoderArgs(), outputPath,
     ]);
 
@@ -426,8 +524,8 @@ export class LyricVideoRenderer implements Renderer {
         }
       }
     }
-    writeFileSync(`${outputPath}.json`, JSON.stringify({ project: projectForOutput, outputPath, duration }, null, 2));
-    return { outputPath, format: 'mp4', duration };
+    writeFileSync(`${outputPath}.json`, JSON.stringify({ project: projectForOutput, outputPath, duration: outputDuration }, null, 2));
+    return { outputPath, format: 'mp4', duration: outputDuration };
   }
 
   /**
@@ -441,10 +539,12 @@ export class LyricVideoRenderer implements Renderer {
     outputPath: string;
     project: Project;
     duration: number;
+    outputDuration: number;
+    exportTrim?: ExportTrim;
     hasAudio: boolean;
     applyCase: (input: string) => string;
   }): Promise<RenderResult> {
-    const { ffmpegPath, outputPath, project, duration, hasAudio, applyCase } = params;
+    const { ffmpegPath, outputPath, project, duration, outputDuration, exportTrim, hasAudio, applyCase } = params;
     const config = project.renderConfig;
     const W = config.width;
     const H = config.height;
@@ -506,7 +606,6 @@ export class LyricVideoRenderer implements Renderer {
     // --- per-word drawtext ---
     const wordDisplay = config.wordDisplay ?? { mode: 'single-word' as const, hold: 'word-end' as const };
     const allLines = project.lyrics.sections.flatMap((section) => section.lines);
-    const wordGap = ' '.repeat(Math.max(1, Math.round((wordDisplay.spacing ?? 0.25) / 0.25)));
     const fallbackRender = (): ResolvedWordRender => ({
       fontFamily: config.style.fontFamily, fontSizePx: Math.round(H / 11), color: config.style.primaryColor,
       opacity: 1, xNorm: 0.5, yNorm: 0.5,
@@ -517,10 +616,12 @@ export class LyricVideoRenderer implements Renderer {
       if (config.lyricAnimation.type === 'word-by-word' && line.words.length > 0) {
         line.words.forEach((word, index) => {
           const end = wordDisplay.hold === 'next-word' ? line.words[index + 1]?.start ?? line.end : word.end;
-          const rawText = wordDisplay.mode === 'single-word'
-            ? word.text
-            : line.words.slice(0, index + 1).map((item) => item.text).join(wordGap);
-          draws.push(this.drawWord(word, applyCase(rawText), word.start, Math.max(word.start + 0.01, end), W, H, fallbackRender));
+          if (wordDisplay.mode === 'cumulative') {
+            const words = line.words.slice(0, index + 1).map((item) => applyCase(item.text));
+            draws.push(this.drawCumulative(word, words, word.start, Math.max(word.start + 0.01, end), W, H, fallbackRender));
+          } else {
+            draws.push(this.drawWord(word, applyCase(word.text), word.start, Math.max(word.start + 0.01, end), W, H, fallbackRender));
+          }
         });
       } else {
         const synthetic: Word = { text: line.text, start: line.start, end: line.end, render: fallbackRender() };
@@ -541,17 +642,27 @@ export class LyricVideoRenderer implements Renderer {
     nodes.push(...buildGradeChain(effects, preGrade, size, fps, totalFrames, viz ? 'basev' : 'outv'));
 
     let audioMap: string[] = audioIndex !== undefined ? ['-map', `${audioIndex}:a:0`] : [];
+    let vizAudioLabel: string | undefined;
     if (viz && audioIndex !== undefined) {
       const vizNodes = buildMusicVizNodes({ audioInputIndex: audioIndex, width: W, height: H, fps, viz, baseLabel: 'basev', outLabel: 'outv' });
       nodes.push(...vizNodes.nodes);
+      vizAudioLabel = vizNodes.audioOutLabel;
       audioMap = ['-map', `[${vizNodes.audioOutLabel}]`];
+    }
+    let videoMap = ['-map', '[outv]'];
+    if (exportTrim) {
+      const audioRef = audioIndex === undefined ? undefined : (vizAudioLabel ?? `${audioIndex}:a:0`);
+      const trimNodes = buildExportTrimNodes(exportTrim, 'outv', audioRef);
+      nodes.push(...trimNodes.nodes);
+      videoMap = trimNodes.videoMap;
+      audioMap = trimNodes.audioMap;
     }
 
     const complex = nodes.join(';');
     await runWithFilterComplex(ffmpegPath, inputArgs, complex, [
-      '-map', '[outv]',
+      ...videoMap,
       ...(audioIndex !== undefined ? [...audioMap, '-c:a', 'aac', '-b:a', '192k'] : []),
-      '-t', String(duration),
+      '-t', String(outputDuration),
       ...videoEncoderArgs(), outputPath,
     ]);
     if (!existsSync(outputPath)) throw new Error('FFmpeg reported success but no output file was created.');
@@ -563,8 +674,8 @@ export class LyricVideoRenderer implements Renderer {
         for (const word of line.words ?? []) word.text = applyCase(word.text);
       }
     }
-    writeFileSync(`${outputPath}.json`, JSON.stringify({ project: projectForOutput, outputPath, duration }, null, 2));
-    return { outputPath, format: 'mp4', duration };
+    writeFileSync(`${outputPath}.json`, JSON.stringify({ project: projectForOutput, outputPath, duration: outputDuration }, null, 2));
+    return { outputPath, format: 'mp4', duration: outputDuration };
   }
 
   private drawWord(
@@ -597,6 +708,47 @@ export class LyricVideoRenderer implements Renderer {
       stroke: r.stroke,
       shadow: r.shadow,
     });
+  }
+
+  /**
+   * Cumulative draw: keeps the resolved font size constant (no auto-shrink) and
+   * wraps the accumulated words onto extra lines when they no longer fit the
+   * frame width, so overflowing words drop down rather than shrinking the line.
+   */
+  private drawCumulative(
+    word: Word,
+    words: string[],
+    start: number,
+    end: number,
+    W: number,
+    H: number,
+    fallback: () => ResolvedWordRender,
+  ): string {
+    const r = word.render ?? fallback();
+    const fontSizePx = r.fontSizePx;
+    const lines = wrapWords(words, fontSizePx, W, 0.6);
+    const lineHeightNorm = (fontSizePx * 1.25) / H;
+    const center = (lines.length - 1) / 2;
+    const token = fontToken(r.fontFamily);
+    const color = colorToFfmpeg(r.color);
+    return lines
+      .map((lineText, i) => buildWordDrawText({
+        safeText: escapeFilterValue(lineText),
+        fontToken: token,
+        fontColor: color,
+        fontSizePx,
+        start,
+        end,
+        width: W,
+        height: H,
+        xNorm: r.xNorm,
+        yNorm: r.yNorm + (i - center) * lineHeightNorm,
+        opacity: r.opacity,
+        animation: r.animation,
+        stroke: r.stroke,
+        shadow: r.shadow,
+      }))
+      .join(',');
   }
 
   /** Reveals the word one letter at a time (real typewriter), left-anchored. */

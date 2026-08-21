@@ -67,6 +67,7 @@ npx tsx src/cli.ts create --audio input/song.mp3 --input input/lyrics.txt --temp
   "background": { /* Background, see §5 */ },
   "effects":    { /* Effects, see §6 */ },
   "musicViz":   { /* Music visualizer, see §13 */ },
+  "exportRange": { "start": 0, "end": null }, // optional; trim export to [start, end] seconds
   "sections":   [ /* SectionConfig, see §4 */ ],
   "lines":      [ /* optional per-line overrides */ ],
   "wordStyles": { "rise": "anger", "dark": { "color": "#9fdcff" } }

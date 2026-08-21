@@ -57,6 +57,14 @@ export interface WordDisplay {
   spacing?: number;
 }
 
+/** Restrict the exported video to a sub-range of the timeline (seconds). */
+export interface ExportRange {
+  /** Inclusive start time in seconds. Defaults to 0. */
+  start?: number;
+  /** Exclusive end time in seconds. Defaults to the full duration. */
+  end?: number;
+}
+
 export interface DynamicWordEffect {
   name: string;
   minDuration?: number;
@@ -102,4 +110,6 @@ export interface RenderConfig {
   customBackground?: ResolvedBackground;
   /** Audio-reactive visualizer drawn over the frame (needs an audio track). */
   musicViz?: MusicVizConfig;
+  /** Restrict the export to a sub-range of the timeline (seconds). */
+  exportRange?: ExportRange;
 }

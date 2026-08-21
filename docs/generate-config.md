@@ -85,6 +85,30 @@ Controls how words appear per line.
 | `hold` | string | `next-word` | `next-word` keeps a word up until the next word starts; `word-end` clears it at the word's end. |
 | `spacing` | number | `0.25` | Gap between words in cumulative mode. In the preview it's `em`; in the render each `0.25` maps to one extra space. |
 
+In `cumulative` mode the font size stays constant as words are appended; when a
+line no longer fits the frame width the extra words wrap onto a new line below
+instead of shrinking the whole line.
+
+## `exportRange`
+
+Restrict the rendered video to a sub-range of the timeline (in seconds). Useful
+for exporting a single section or a short preview clip.
+
+| Field | Type | Default | Effect |
+|---|---|---|---|
+| `start` | number | `0` | Export begins at this time (seconds). |
+| `end` | number \| null | full duration | Export ends at this time (seconds). `null`/omitted = to the end. |
+
+Example — export only 30s–48s:
+
+```json
+"exportRange": { "start": 30, "end": 48 }
+```
+
+Word timings keep their real positions, so the exported segment is trimmed from
+the full timeline (the audio is trimmed to match). Leaving both at their
+defaults (`start: 0`, `end: null`) exports the whole video.
+
 ## `viz`
 
 Audio-reactive visualizer drawn over the frame (needs an audio track).

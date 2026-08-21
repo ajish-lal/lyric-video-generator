@@ -189,6 +189,19 @@ export function validateConfig(config: ProjectConfig): ValidationResult {
     }
   }
 
+  if (config.exportRange) {
+    const { start, end } = config.exportRange;
+    if (start != null && (Number.isNaN(start) || start < 0)) {
+      result.errors.push('exportRange.start must be >= 0.');
+    }
+    if (end != null && (Number.isNaN(end) || end <= 0)) {
+      result.errors.push('exportRange.end must be > 0.');
+    }
+    if (start != null && end != null && end <= start) {
+      result.errors.push(`exportRange.end (${end}) must be greater than exportRange.start (${start}).`);
+    }
+  }
+
   return result;
 }
 

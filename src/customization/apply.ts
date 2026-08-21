@@ -227,6 +227,7 @@ export function applyCustomizationToProject(project: Project, config: ProjectCon
   project.renderConfig.customized = true;
   if (config.musicViz) project.renderConfig.musicViz = config.musicViz;
   if (config.wordDisplay) project.renderConfig.wordDisplay = config.wordDisplay;
+  if (config.exportRange) project.renderConfig.exportRange = config.exportRange;
 
   if (config.resolution) {
     if (config.resolution.width) project.renderConfig.width = config.resolution.width;

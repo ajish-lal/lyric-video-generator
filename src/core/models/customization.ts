@@ -10,7 +10,7 @@
  * exactly like before.
  */
 
-import type { MusicVizConfig, WordDisplay } from './render.js';
+import type { ExportRange, MusicVizConfig, WordDisplay } from './render.js';
 
 /** Normalized 0..1 position (resolution independent). */
 export interface Position {
@@ -155,6 +155,8 @@ export interface ProjectConfig {
   musicViz?: MusicVizConfig;
   /** how words appear per line: one at a time, or appended cumulatively. */
   wordDisplay?: WordDisplay;
+  /** restrict the exported video to a sub-range of the timeline (seconds). */
+  exportRange?: ExportRange;
 }
 
 // ---------------------------------------------------------------------------

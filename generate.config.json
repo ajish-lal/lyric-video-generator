@@ -25,6 +25,10 @@
     "hold": "next-word",
     "spacing": 0.25
   },
+  "exportRange": {
+    "start": 0,
+    "end": null
+  },
   "viz": {
     "enabled": false,
     "mode": "wave",

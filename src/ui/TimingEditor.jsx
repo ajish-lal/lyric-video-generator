@@ -331,6 +331,10 @@ export default function TimingEditor({ active = true }) {
     setConfig((c) => (c ? { ...c, typography: { ...(c.typography || {}), fontSize: value } } : c));
   };
 
+  const setWordDisplayMode = (mode) => {
+    setConfig((c) => (c ? { ...c, wordDisplay: { ...(c.wordDisplay || {}), mode } } : c));
+  };
+
   const nudge = (delta, edge) => {
     if (!selected) return;
     const start = edge === 'start' ? round(Math.max(0, selected.start + delta)) : selected.start;
@@ -363,6 +367,7 @@ export default function TimingEditor({ active = true }) {
   const resW = config?.resolution?.width ?? 1920;
   const resH = config?.resolution?.height ?? 1080;
   const globalFontSize = config?.typography?.fontSize ?? 160;
+  const wordDisplayMode = config?.wordDisplay?.mode === 'cumulative' ? 'cumulative' : 'single-word';
   const resPreset = `${resW}x${resH}`;
 
   return (
@@ -393,8 +398,10 @@ export default function TimingEditor({ active = true }) {
         config={config}
         resPreset={resPreset}
         globalFontSize={globalFontSize}
+        wordDisplayMode={wordDisplayMode}
         onResolutionChange={setResolution}
         onGlobalFontSizeChange={setGlobalFontSize}
+        onWordDisplayModeChange={setWordDisplayMode}
       />
 
       <ShortcutsLegend />
