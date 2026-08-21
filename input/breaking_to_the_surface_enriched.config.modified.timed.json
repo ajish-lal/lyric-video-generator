@@ -2310,7 +2310,10 @@
   "wordDisplay": {
     "mode": "single-word",
     "hold": "next-word",
-    "spacing": 0.5
+    "spacing": 0.5,
+    "minWordDuration": 0.25,
+    "fadeInDuration": 0.06,
+    "fadeOutDuration": 0.12
   },
   "exportRange": {
     "start": 57.268,

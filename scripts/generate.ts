@@ -122,6 +122,9 @@ async function main(): Promise<void> {
           mode: cfg.wordDisplay.mode,
           hold: cfg.wordDisplay.hold ?? 'next-word',
           ...(cfg.wordDisplay.spacing !== undefined ? { spacing: cfg.wordDisplay.spacing } : {}),
+          ...(cfg.wordDisplay.minWordDuration !== undefined ? { minWordDuration: cfg.wordDisplay.minWordDuration } : {}),
+          ...(cfg.wordDisplay.fadeInDuration !== undefined ? { fadeInDuration: cfg.wordDisplay.fadeInDuration } : {}),
+          ...(cfg.wordDisplay.fadeOutDuration !== undefined ? { fadeOutDuration: cfg.wordDisplay.fadeOutDuration } : {}),
         }
       : undefined,
     exportRange: cfg.exportRange,

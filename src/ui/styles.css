@@ -281,6 +281,7 @@ pre {
 }
 
 .editor-settings .setting {
+  display: flex;
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.78rem;
@@ -301,7 +302,7 @@ pre {
 }
 
 .editor-settings .export-range {
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
 .export-range-title {
@@ -309,34 +310,63 @@ pre {
   color: #9ca3af;
 }
 
-.export-range-row {
+.export-range-fields {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .export-range-label {
-  width: 2.6rem;
+  font-size: 0.78rem;
   color: #cbd5e1;
 }
 
 .editor-settings .export-range input {
-  width: 5rem;
-}
-
-.export-range-row button {
-  padding: 0.35rem 0.5rem;
+  width: 4.5rem;
+  padding: 0.5rem 0.55rem;
   border-radius: 4px;
   background: #1f2937;
   border: 1px solid #374151;
   color: #e5e7eb;
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-settings .export-range input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.export-range-fields button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #93c5fd;
   cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.export-range-fields button:hover:not(:disabled) {
+  background: #273449;
+  border-color: #2563eb;
+}
+
+.export-range-fields button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .export-range-hint {
+  margin-left: 0.25rem;
   font-size: 0.72rem;
-  color: #6b7280;
+  color: #94a3b8;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .preview-stage {
@@ -379,7 +409,7 @@ pre {
 }
 
 .preview-word {
-  transition: opacity 0.12s linear;
+  transition: none;
 }
 
 .preview-word.active {
@@ -637,6 +667,44 @@ pre {
 
 .warnings ul {
   margin: 0;
-  padding-left: 1.1rem;
+  padding-left: 0;
+  list-style: none;
   font-size: 0.85rem;
+}
+
+.warning-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+
+.warning-link {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #fde68a;
+  cursor: pointer;
+  padding: 0.1rem 0;
+  text-decoration: underline dotted;
+}
+
+.warning-link:hover {
+  color: #fff7ed;
+}
+
+.warning-fix {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: #b45309;
+  border: 1px solid #f59e0b;
+  color: #fff7ed;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.warning-fix:hover {
+  background: #d97706;
 }

@@ -5,6 +5,7 @@ import { MAX_FONT, MIN_DURATION, round } from '../timing-model.js';
 export default function Inspector({
   selected, globalFontSize, warnings,
   onTextChange, onPatch, onFontSizeChange, onColorChange, onNudge,
+  onSelectWarning, onResolveWarning,
 }) {
   return (
     <div className="inspector">
@@ -57,7 +58,18 @@ export default function Inspector({
       {warnings.length > 0 && (
         <div className="warnings">
           <h4>{warnings.length} warning(s)</h4>
-          <ul>{warnings.slice(0, 8).map((w, i) => <li key={i}>{w}</li>)}</ul>
+          <ul>
+            {warnings.slice(0, 8).map((w, i) => (
+              <li key={i} className="warning-row">
+                <button type="button" className="warning-link" title="Select this word"
+                  onClick={() => onSelectWarning?.(w.id)}>
+                  {w.message}
+                </button>
+                <button type="button" className="warning-fix" title="Auto-resolve"
+                  onClick={() => onResolveWarning?.(w)}>Fix</button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

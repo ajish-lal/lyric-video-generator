@@ -202,6 +202,16 @@ export function validateConfig(config: ProjectConfig): ValidationResult {
     }
   }
 
+  if (config.wordDisplay) {
+    const wd = config.wordDisplay;
+    for (const key of ['minWordDuration', 'fadeInDuration', 'fadeOutDuration'] as const) {
+      const v = wd[key];
+      if (v != null && (Number.isNaN(v) || v < 0)) {
+        result.errors.push(`wordDisplay.${key} must be >= 0.`);
+      }
+    }
+  }
+
   return result;
 }
 

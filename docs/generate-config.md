@@ -84,10 +84,19 @@ Controls how words appear per line.
 | `mode` | string | `single-word` | `single-word` shows one word at a time; `cumulative` appends words within a line (`The` → `The storms` → `The storms are` …). |
 | `hold` | string | `next-word` | `next-word` keeps a word up until the next word starts; `word-end` clears it at the word's end. |
 | `spacing` | number | `0.25` | Gap between words in cumulative mode. In the preview it's `em`; in the render each `0.25` maps to one extra space. |
+| `minWordDuration` | number | `0` | Minimum seconds each word stays on screen. Raise this (e.g. `0.25`) so fast words — or words whose timings overlap the next word — stay long enough to read. Every word is always shown for at least ~1.5 frames regardless. |
+| `fadeInDuration` | number | `0.12` | Fade-in ramp in seconds. Lower it (e.g. `0.05`) to make words snap in; it is auto-capped so short words still reach full brightness. |
+| `fadeOutDuration` | number | anim default | Fade-out ramp in seconds. Lower it to keep words crisp until they cut; higher for a slower dissolve. |
 
 In `cumulative` mode the font size stays constant as words are appended; when a
 line no longer fits the frame width the extra words wrap onto a new line below
 instead of shrinking the whole line.
+
+> Tip: if some words never appear, their timings likely overlap the next word
+> (the next word starts before the current one ends), collapsing the display
+> window. Set `minWordDuration` to force them on screen, and/or fix the
+> overlapping timings in the editor (overlap warnings are now clickable with a
+> one-click **Fix**).
 
 ## `exportRange`
 

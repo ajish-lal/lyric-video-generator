@@ -49,8 +49,11 @@ function resolveFfmpegPath(): string | null {
 function escapeFilterValue(value: string): string {
   return value
     .replace(/\\/g, '\\\\')
+    // FFmpeg's shell-style single-quote escaping (' \'' ') silently drops the
+    // word whenever the drawtext isn't the last filter in the chain, so map
+    // straight apostrophes to the typographic one — robust and nicer for lyrics.
+    .replace(/'/g, '\u2019')
     .replace(/:/g, '\\:')
-    .replace(/'/g, "'\\''")
     .replace(/,/g, '\\,');
 }
 
@@ -163,6 +166,53 @@ function wrapWords(words: string[], fontSizePx: number, width: number, glyphAspe
 interface ExportTrim {
   start: number;
   end: number;
+}
+
+/** Fade-ramp overrides forwarded from `wordDisplay` to the drawtext builders. */
+interface FadeOptions {
+  fadeInDuration?: number;
+  fadeOutDuration?: number;
+}
+
+/**
+ * Effective on-screen end time for a word. Guarantees the window is at least
+ * ~1.5 frames (so it can never fall between frames and vanish) plus any
+ * configured `minWordDuration`, keeping fast/overlapping words readable.
+ */
+function displayEnd(start: number, computedEnd: number, fps: number, minWordDuration = 0): number {
+  const frameFloor = 1.5 / Math.max(1, fps);
+  return Math.max(start + 0.01, computedEnd, start + frameFloor, start + Math.max(0, minWordDuration));
+}
+
+/**
+ * Compute the on-screen [start,end] window for every word in a line.
+ *
+ * In `single-word` mode the windows are made *exclusive*: if a word's timing
+ * overlaps the next (a common transcription artefact), the next word's display
+ * is pushed back so each word gets its own readable slot instead of being drawn
+ * over. In `cumulative` mode windows stay synced to the audio (no cascade).
+ * Every window is floored to ~1.5 frames plus any `minWordDuration`.
+ */
+function computeWordWindows(
+  words: Word[],
+  lineEnd: number,
+  hold: 'word-end' | 'next-word',
+  fps: number,
+  minWordDuration = 0,
+  mode: 'single-word' | 'cumulative' = 'single-word',
+): Array<{ start: number; end: number }> {
+  const frameFloor = 1.5 / Math.max(1, fps);
+  const minDur = Math.max(0, minWordDuration);
+  const windows: Array<{ start: number; end: number }> = [];
+  let prevEnd = -Infinity;
+  words.forEach((word, index) => {
+    const naturalEnd = hold === 'next-word' ? words[index + 1]?.start ?? lineEnd : word.end;
+    const start = mode === 'single-word' ? Math.max(word.start, prevEnd) : word.start;
+    const end = Math.max(start + 0.01, naturalEnd, start + frameFloor, start + minDur);
+    if (mode === 'single-word') prevEnd = end;
+    windows.push({ start, end });
+  });
+  return windows;
 }
 
 /** Resolve a config export range into a concrete, validated trim window. */
@@ -357,11 +407,15 @@ export class LyricVideoRenderer implements Renderer {
       const minSize = Math.round(config.height / 14);
       const fitted = Math.round((config.width * 0.86) / (glyphs * 0.62));
       const fontSize = Math.max(minSize, Math.min(maxSize, fitted));
+      // Cap the fade-in to the window so short words still reach full brightness.
+      const win = Math.max(0.05, end - start);
+      const fIn = Math.max(0.001, Math.min(wordDisplay.fadeInDuration ?? 0.12, win * 0.9)).toFixed(3);
+      const fInSmog = Math.max(0.001, Math.min(wordDisplay.fadeInDuration ?? 0.18, win * 0.9)).toFixed(3);
       const alpha = fade
         ? `if(lt(t,${formattedStart}+0.35),(t-${formattedStart})/0.35,if(gt(t,${formattedEnd}-0.35),(${formattedEnd}-t)/0.35,1))`
         : isSmog
-          ? `min(1,(t-${formattedStart})/0.18)`
-          : `min(1,(t-${formattedStart})/0.12)`;
+          ? `min(1,(t-${formattedStart})/${fInSmog})`
+          : `min(1,(t-${formattedStart})/${fIn})`;
       const x = isSlash ? `(w-text_w)/2+${Math.round((effect.animation?.intensity ?? 0.8) * 12)}*sin(95*t)` : '(w-text_w)/2';
       const wordY = isSmog ? `${y}-text_h/2+${Math.round((effect?.animation?.intensity ?? 0.7) * 18)}*sin(3*t)` : `${y}-text_h/2`;
       const font = fontToken(effect?.fontFamily ?? config.style.fontFamily);
@@ -390,19 +444,18 @@ export class LyricVideoRenderer implements Renderer {
     };
     const filters = allLines.flatMap((line) => {
       if (config.lyricAnimation.type === 'word-by-word' && line.words.length > 0) {
+        const windows = computeWordWindows(line.words, line.end, wordDisplay.hold, config.fps, wordDisplay.minWordDuration, wordDisplay.mode);
         return line.words.map((word, index) => {
-          const end = wordDisplay.hold === 'next-word'
-            ? line.words[index + 1]?.start ?? line.end
-            : word.end;
+          const { start, end } = windows[index];
           if (wordDisplay.mode === 'cumulative') {
             const words = line.words.slice(0, index + 1).map((item) => applyCase(item.text));
-            return buildCumulativeDraws(words, word.start, Math.max(word.start + 0.01, end));
+            return buildCumulativeDraws(words, start, end);
           }
           const text = applyCase(word.text);
           return createTextFilter(
             text,
-            word.start,
-            Math.max(word.start + 0.01, end),
+            start,
+            end,
             false,
             word,
           );
@@ -612,20 +665,24 @@ export class LyricVideoRenderer implements Renderer {
       animation: { motion: 'fade', inDuration: 0.3, translatePx: 0, overshoot: 0, shakePx: 0, shakeHz: 0, glitch: false, opacityMul: 1 },
     });
     const draws: string[] = [];
+    const fade: FadeOptions = { fadeInDuration: wordDisplay.fadeInDuration, fadeOutDuration: wordDisplay.fadeOutDuration };
+    const minWordDuration = wordDisplay.minWordDuration;
     for (const line of allLines) {
       if (config.lyricAnimation.type === 'word-by-word' && line.words.length > 0) {
+        const windows = computeWordWindows(line.words, line.end, wordDisplay.hold, fps, minWordDuration, wordDisplay.mode);
         line.words.forEach((word, index) => {
-          const end = wordDisplay.hold === 'next-word' ? line.words[index + 1]?.start ?? line.end : word.end;
+          const { start, end } = windows[index];
           if (wordDisplay.mode === 'cumulative') {
             const words = line.words.slice(0, index + 1).map((item) => applyCase(item.text));
-            draws.push(this.drawCumulative(word, words, word.start, Math.max(word.start + 0.01, end), W, H, fallbackRender));
+            draws.push(this.drawCumulative(word, words, start, end, W, H, fallbackRender, fade));
           } else {
-            draws.push(this.drawWord(word, applyCase(word.text), word.start, Math.max(word.start + 0.01, end), W, H, fallbackRender));
+            draws.push(this.drawWord(word, applyCase(word.text), start, end, W, H, fallbackRender, fade));
           }
         });
       } else {
         const synthetic: Word = { text: line.text, start: line.start, end: line.end, render: fallbackRender() };
-        draws.push(this.drawWord(synthetic, applyCase(line.text), line.start, Math.max(line.start + 0.01, line.end), W, H, fallbackRender));
+        const end = displayEnd(line.start, line.end, fps, minWordDuration);
+        draws.push(this.drawWord(synthetic, applyCase(line.text), line.start, end, W, H, fallbackRender, fade));
       }
     }
 
@@ -686,6 +743,7 @@ export class LyricVideoRenderer implements Renderer {
     W: number,
     H: number,
     fallback: () => ResolvedWordRender,
+    fade: FadeOptions = {},
   ): string {
     const r = word.render ?? fallback();
     const fontSizePx = fitFontSize(r.fontSizePx, displayText, W);
@@ -707,6 +765,7 @@ export class LyricVideoRenderer implements Renderer {
       animation: r.animation,
       stroke: r.stroke,
       shadow: r.shadow,
+      ...fade,
     });
   }
 
@@ -723,6 +782,7 @@ export class LyricVideoRenderer implements Renderer {
     W: number,
     H: number,
     fallback: () => ResolvedWordRender,
+    fade: FadeOptions = {},
   ): string {
     const r = word.render ?? fallback();
     const fontSizePx = r.fontSizePx;
@@ -747,6 +807,7 @@ export class LyricVideoRenderer implements Renderer {
         animation: r.animation,
         stroke: r.stroke,
         shadow: r.shadow,
+        ...fade,
       }))
       .join(',');
   }

@@ -35,6 +35,10 @@ export interface WordDrawInput {
   animation: AnimationBehavior;
   stroke?: { width: number; color: string };
   shadow?: { dx: number; dy: number; color: string; alpha: number };
+  /** Optional fade-in override in seconds (0 = snap on). */
+  fadeInDuration?: number;
+  /** Optional fade-out override in seconds (0 = hard cut). */
+  fadeOutDuration?: number;
 }
 
 /** Build the x/y/alpha expressions for a word given its animation behavior. */
@@ -48,9 +52,13 @@ export function animationExpressions(
   const baseY = `(h*${yNorm.toFixed(4)}-text_h/2)`;
   // Cap the entrance so slow fades still fully appear inside a short slot.
   const wordDuration = Math.max(0.05, end - start);
-  const effIn = Math.max(0.06, Math.min(a.inDuration || 0.3, wordDuration * 0.5));
+  const effIn = input.fadeInDuration != null
+    ? Math.max(0.001, Math.min(input.fadeInDuration, wordDuration * 0.9))
+    : Math.max(0.06, Math.min(a.inDuration || 0.3, wordDuration * 0.5));
   const dIn = effIn.toFixed(3);
-  const dOut = Math.max(0.08, Math.min(effIn, 0.35)).toFixed(3);
+  const dOut = (input.fadeOutDuration != null
+    ? Math.max(0.001, Math.min(input.fadeOutDuration, wordDuration * 0.9))
+    : Math.max(0.08, Math.min(effIn, 0.35))).toFixed(3);
   const tt = `(t-${ts})`;
   const prog = `min(1,${tt}/${dIn})`;
   const easeOut = `(1-pow(1-${prog},3))`;

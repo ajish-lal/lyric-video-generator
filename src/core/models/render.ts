@@ -55,6 +55,12 @@ export interface WordDisplay {
   hold: WordDisplayHold;
   /** Gap between words in cumulative mode, in em (preview) / spaces (render). Default 0.25. */
   spacing?: number;
+  /** Minimum seconds each word stays on screen, so fast/overlapping words remain readable. */
+  minWordDuration?: number;
+  /** Fade-in ramp in seconds (overrides the animation default). 0 = snap on. */
+  fadeInDuration?: number;
+  /** Fade-out ramp in seconds (overrides the animation default). 0 = hard cut. */
+  fadeOutDuration?: number;
 }
 
 /** Restrict the exported video to a sub-range of the timeline (seconds). */

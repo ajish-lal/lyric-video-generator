@@ -50,7 +50,7 @@ export default function EditorSettings({
 
       <div className="setting export-range" title="Trim the exported video. Accepts m:ss or seconds; blank = full length.">
         <span className="export-range-title">Export range</span>
-        <div className="export-range-row">
+        <div className="export-range-fields">
           <span className="export-range-label">Start</span>
           <input
             type="text" inputMode="decimal" placeholder="0:00" disabled={!config}
@@ -61,8 +61,6 @@ export default function EditorSettings({
           />
           <button type="button" disabled={!config} title="Set start to the playhead"
             onClick={() => onExportRangeChange({ start: Number(currentTime.toFixed(3)) })}>⏱</button>
-        </div>
-        <div className="export-range-row">
           <span className="export-range-label">End</span>
           <input
             type="text" inputMode="decimal" placeholder={duration ? formatClock(duration) : 'end'} disabled={!config}
@@ -73,12 +71,12 @@ export default function EditorSettings({
           />
           <button type="button" disabled={!config} title="Set end to the playhead"
             onClick={() => onExportRangeChange({ end: Number(currentTime.toFixed(3)) })}>⏱</button>
+          <span className="export-range-hint">
+            {exportStart != null || exportEnd != null
+              ? `${formatClock(exportStart ?? 0)}–${exportEnd != null ? formatClock(exportEnd) : formatClock(duration)}`
+              : 'Full length'}
+          </span>
         </div>
-        <span className="export-range-hint">
-          {exportStart != null || exportEnd != null
-            ? `Exports ${formatClock(exportStart ?? 0)}–${exportEnd != null ? formatClock(exportEnd) : formatClock(duration)}`
-            : 'Full length'}
-        </span>
       </div>
     </div>
   );

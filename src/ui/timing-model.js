@@ -40,6 +40,140 @@ export const parseTimeInput = (value) => {
   return Number.isNaN(n) ? null : n;
 };
 
+// Colour/opacity contributions of the built-in presets, mirrored from the TS
+// presets so the preview shows the same colours the renderer resolves.
+const EMPHASIS_STYLE = {
+  subtle: { opacity: 0.85 },
+  scream: { color: '#ff304f' },
+  whisper: { opacity: 0.55 },
+  anger: { color: '#ff2530' },
+  cold: { color: '#9fdcff' },
+  corrupted: { color: '#c8ffd0' },
+};
+const TREATMENT_STYLE = {
+  corrupted: { color: '#c8ffd0' },
+  ghost: { opacity: 0.5 },
+};
+const SECTION_STYLE = {
+  nu_metal_verse: { color: '#e9edf2' },
+  pre_chorus: { color: '#dbe2ea' },
+  rap_section: { color: '#e9edf2' },
+  heavy_chorus: { color: '#ffffff' },
+  scream_section: { color: '#ff304f' },
+  breakdown: { color: '#ffffff' },
+  dark_bridge: { color: '#aab4c2' },
+  dreamy_bridge: { color: '#d8f7ff' },
+  final_chorus: { color: '#ffffff' },
+};
+
+/** Pull colour/opacity out of one style layer, expanding emphasis/treatment. */
+function styleColorLayer(style) {
+  if (style == null) return {};
+  const s = typeof style === 'string' ? { emphasis: style } : style;
+  const out = {};
+  const emp = s.emphasis && EMPHASIS_STYLE[String(s.emphasis).toLowerCase()];
+  if (emp) Object.assign(out, emp);
+  const treat = s.treatment && TREATMENT_STYLE[String(s.treatment).toLowerCase()];
+  if (treat) Object.assign(out, treat);
+  if (s.color != null) out.color = s.color;
+  if (s.opacity != null) out.opacity = s.opacity;
+  return out;
+}
+
+/** Section style layer = preset colour + explicit overrides. */
+function sectionColorLayer(style) {
+  if (!style) return {};
+  const preset = style.preset ? SECTION_STYLE[style.preset] : null;
+  return { ...(preset || {}), ...styleColorLayer(style) };
+}
+
+function matchWordStyle(wordStyles, text) {
+  if (!wordStyles || text == null) return undefined;
+  const key = String(text).trim().toLowerCase();
+  for (const [name, style] of Object.entries(wordStyles)) {
+    if (String(name).trim().toLowerCase() === key) return style;
+  }
+  return undefined;
+}
+
+/**
+ * Resolve the colour + opacity a unit will actually render with, layering
+ * global typography → section preset/style → line style → wordStyles map →
+ * word style (later wins), matching the renderer's resolver closely enough for
+ * an accurate preview.
+ */
+export function resolveUnitStyle(config, unit) {
+  let color;
+  let opacity;
+  const apply = (layer) => {
+    const ex = styleColorLayer(layer);
+    if (ex.color != null) color = ex.color;
+    if (ex.opacity != null) opacity = ex.opacity;
+  };
+  apply(config.typography);
+  const line = unit.si == null ? config.lines?.[unit.li] : config.sections?.[unit.si]?.lines?.[unit.li];
+  if (unit.si != null) {
+    const sec = config.sections?.[unit.si];
+    if (sec?.style) apply(sectionColorLayer(sec.style));
+  }
+  if (line?.style) apply(line.style);
+  if (unit.wi != null) {
+    const word = line?.words?.[unit.wi];
+    if (word) {
+      const mapStyle = matchWordStyle(config.wordStyles, word.text);
+      if (mapStyle) apply(mapStyle);
+      if (word.style) apply(word.style);
+    }
+  }
+  return { color, opacity: opacity ?? 1 };
+}
+
+/**
+ * Compute each unit's on-screen [start,end] window, mirroring the renderer:
+ * single-word mode gives every word an exclusive slot (cascading overlaps) and
+ * floors the window to ~1.5 frames plus `minWordDuration`; cumulative stays in
+ * sync with the audio.
+ */
+export function computeDisplayWindows(units, opts = {}) {
+  const { hold = 'next-word', minWordDuration = 0, mode = 'single-word', fps = 30 } = opts;
+  const frameFloor = 1.5 / Math.max(1, fps);
+  const min = Math.max(0, minWordDuration || 0);
+  const byLine = new Map();
+  for (const u of units) {
+    const key = `${u.si}:${u.li}`;
+    if (!byLine.has(key)) byLine.set(key, []);
+    byLine.get(key).push(u);
+  }
+  const windows = new Map();
+  for (const group of byLine.values()) {
+    const ws = [...group].sort((a, b) => a.start - b.start);
+    const lineEnd = ws.length ? ws[ws.length - 1].end : 0;
+    let prevEnd = -Infinity;
+    ws.forEach((u, i) => {
+      const naturalEnd = hold === 'next-word' ? ws[i + 1]?.start ?? lineEnd : u.end;
+      const start = mode === 'single-word' ? Math.max(u.start, prevEnd) : u.start;
+      const end = Math.max(start + 0.01, naturalEnd, start + frameFloor, start + min);
+      if (mode === 'single-word') prevEnd = end;
+      windows.set(u.id, { start, end });
+    });
+  }
+  return windows;
+}
+
+/**
+ * Smoothstep fade opacity at time `t` for a display window, matching the
+ * renderer's in/out ramp. `fadeIn`/`fadeOut` are seconds; both are capped to
+ * the window so short words still reach full brightness.
+ */
+export function fadeOpacityAt(t, win, fadeIn = 0.12, fadeOut) {
+  if (!win || t < win.start || t > win.end) return 0;
+  const dur = Math.max(0.05, win.end - win.start);
+  const fi = Math.max(0.001, Math.min(fadeIn ?? 0.12, dur * 0.9));
+  const fo = Math.max(0.001, Math.min(fadeOut ?? fi, dur * 0.9));
+  const ramp = Math.max(0, Math.min((t - win.start) / fi, (win.end - t) / fo, 1));
+  return ramp * ramp * (3 - 2 * ramp);
+}
+
 /**
  * Flatten a ProjectConfig into an ordered list of timed units. Words are
  * preferred; a line with no timed words becomes a single unit. Each unit keeps
@@ -116,17 +250,53 @@ export function applyUnitsToConfig(config, units) {
   return next;
 }
 
-/** Overlap / ordering warnings so the user can spot messy edits before saving. */
+/**
+ * Overlap / ordering warnings so the user can spot messy edits before saving.
+ * Each warning references the offending unit (`id`) and, for overlaps, the
+ * earlier neighbour (`otherId`) so the UI can select and auto-resolve it.
+ */
 export function computeWarnings(units) {
   const warnings = [];
   const sorted = [...units].sort((a, b) => a.start - b.start);
   for (let i = 0; i < sorted.length; i += 1) {
-    if (sorted[i].end <= sorted[i].start) warnings.push(`"${sorted[i].text}" has end ≤ start.`);
+    if (sorted[i].end <= sorted[i].start) {
+      warnings.push({ id: sorted[i].id, kind: 'reversed', message: `"${sorted[i].text}" has end ≤ start.` });
+    }
     if (i > 0 && sorted[i].start < sorted[i - 1].end - 1e-6) {
-      warnings.push(`"${sorted[i].text}" overlaps "${sorted[i - 1].text}".`);
+      warnings.push({
+        id: sorted[i].id,
+        otherId: sorted[i - 1].id,
+        kind: 'overlap',
+        message: `"${sorted[i].text}" overlaps "${sorted[i - 1].text}".`,
+      });
     }
   }
   return warnings;
+}
+
+/**
+ * Resolve a single warning, returning updated units. A reversed clip gets a
+ * minimum-length window; an overlap trims the earlier clip to end where the
+ * later one starts (pushing the later clip only when there is no room).
+ */
+export function resolveWarning(units, warning) {
+  const arr = units.map((u) => ({ ...u }));
+  const cur = arr.find((u) => u.id === warning.id);
+  if (!cur) return arr;
+  if (warning.kind === 'reversed') {
+    cur.end = round(cur.start + MIN_DURATION);
+    return arr;
+  }
+  const prev = arr.find((u) => u.id === warning.otherId);
+  if (!prev) return arr;
+  if (cur.start - prev.start >= MIN_DURATION) {
+    prev.end = round(cur.start);
+  } else {
+    prev.end = round(prev.start + MIN_DURATION);
+    cur.start = round(prev.end);
+    if (cur.end - cur.start < MIN_DURATION) cur.end = round(cur.start + MIN_DURATION);
+  }
+  return arr;
 }
 
 /**

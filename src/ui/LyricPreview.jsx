@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { computeDisplayWindows, fadeOpacityAt, resolveUnitStyle } from './timing-model.js';
 
 // Font sizes in the config are authored at this reference height (see style-resolver).
 const REFERENCE_HEIGHT = 1080;
@@ -17,7 +18,11 @@ function readStyle(config) {
     animation: config?.typography?.animation || 'fade',
     baseFontPx: config?.typography?.fontSize || DEFAULT_FONT_PX,
     mode: config?.wordDisplay?.mode === 'cumulative' ? 'cumulative' : 'single-word',
+    hold: config?.wordDisplay?.hold === 'word-end' ? 'word-end' : 'next-word',
     spacing: Number(config?.wordDisplay?.spacing) >= 0 ? Number(config.wordDisplay.spacing) : 0.25,
+    minWordDuration: Number(config?.wordDisplay?.minWordDuration) || 0,
+    fadeIn: config?.wordDisplay?.fadeInDuration,
+    fadeOut: config?.wordDisplay?.fadeOutDuration,
   };
 }
 
@@ -43,6 +48,19 @@ function groupLines(units) {
 export default function LyricPreview({ units, currentTime, config }) {
   const style = useMemo(() => readStyle(config), [config]);
   const lines = useMemo(() => groupLines(units), [units]);
+
+  // Resolved per-unit colour/opacity (emphasis, section presets, wordStyles…).
+  const styleById = useMemo(() => {
+    const map = new Map();
+    for (const u of units) map.set(u.id, resolveUnitStyle(config ?? {}, u));
+    return map;
+  }, [units, config]);
+
+  // Display windows (exclusive slots + min duration) so preview timing matches.
+  const windowById = useMemo(
+    () => computeDisplayWindows(units, { hold: style.hold, minWordDuration: style.minWordDuration, mode: style.mode }),
+    [units, style.hold, style.minWordDuration, style.mode],
+  );
 
   const stageRef = useRef(null);
   const [stageHeight, setStageHeight] = useState(0);
@@ -72,11 +90,21 @@ export default function LyricPreview({ units, currentTime, config }) {
     return Math.max(8, Math.min(px, stageHeight || px));
   };
 
-  // The word currently being sung (drives the one-word-at-a-time preview).
-  const activeWord = useMemo(
-    () => units.find((u) => currentTime >= u.start && currentTime < u.end) ?? null,
-    [units, currentTime],
-  );
+  const colorOf = (w) => styleById.get(w.id)?.color || w.color || style.text;
+  const baseOpacityOf = (w) => styleById.get(w.id)?.opacity ?? 1;
+
+  // Single-word: the unit whose display window contains the playhead.
+  const activeUnit = useMemo(() => {
+    if (style.mode !== 'single-word') return null;
+    let best = null;
+    for (const u of units) {
+      const win = windowById.get(u.id);
+      if (win && currentTime >= win.start && currentTime <= win.end) {
+        if (!best || win.start > windowById.get(best.id).start) best = u;
+      }
+    }
+    return best;
+  }, [units, windowById, currentTime, style.mode]);
 
   // The line under the playhead, used only for cumulative display.
   const line = useMemo(
@@ -84,11 +112,11 @@ export default function LyricPreview({ units, currentTime, config }) {
     [lines, currentTime],
   );
 
-  const renderWord = (w, extraClass = '') => (
+  const renderWord = (w, opacity, extraClass = '') => (
     <span
       key={w.id}
       className={`preview-word${extraClass}`}
-      style={{ color: w.color || style.text, fontSize: `${wordFontPx(w)}px` }}
+      style={{ color: colorOf(w), fontSize: `${wordFontPx(w)}px`, opacity }}
     >
       {w.text}
     </span>
@@ -97,19 +125,27 @@ export default function LyricPreview({ units, currentTime, config }) {
   let content;
   if (style.mode === 'cumulative' && line) {
     const shown = line.words.filter((w) => currentTime >= w.start);
+    const newest = shown[shown.length - 1];
+    const fi = Math.max(0.001, style.fadeIn ?? 0.12);
     content = (
       <div className="preview-line" style={{ fontFamily: style.font, gap: `${style.spacing}em` }}>
-        {shown.map((w) => renderWord(w, w === activeWord ? ' active' : ''))}
+        {shown.map((w) => {
+          // Fade the newest word in from its start; earlier words stay full.
+          const r = Math.max(0, Math.min((currentTime - w.start) / fi, 1));
+          const op = baseOpacityOf(w) * (r * r * (3 - 2 * r));
+          return renderWord(w, op, w === newest ? ' active' : '');
+        })}
       </div>
     );
-  } else if (activeWord) {
+  } else if (activeUnit) {
+    const op = baseOpacityOf(activeUnit) * fadeOpacityAt(currentTime, windowById.get(activeUnit.id), style.fadeIn, style.fadeOut);
     content = (
       <div
-        key={activeWord.id}
-        className={`preview-line ${style.animation}`}
+        key={activeUnit.id}
+        className="preview-line"
         style={{ fontFamily: style.font }}
       >
-        {renderWord(activeWord, ' active')}
+        {renderWord(activeUnit, op, ' active')}
       </div>
     );
   } else {

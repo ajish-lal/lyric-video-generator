@@ -16,6 +16,7 @@ import {
   applyUnitsToConfig,
   computeWarnings,
   enforceNoOverlap,
+  resolveWarning,
 } from './timing-model.js';
 
 export default function TimingEditor({ active = true }) {
@@ -263,6 +264,13 @@ export default function TimingEditor({ active = true }) {
     commitUnits(enforceNoOverlap(patched, selected.id, dragModeRef.current));
   };
 
+  // Auto-resolve a single overlap/reversed warning, then select the fixed word.
+  const resolveWarningAt = (warning) => {
+    commitUnits(resolveWarning(unitsRef.current, warning));
+    setSelectedId(warning.id);
+    setSelectedIds([warning.id]);
+  };
+
   const setUnitFontSize = (id, value) => {
     commitUnits(unitsRef.current.map((u) => (u.id === id ? { ...u, fontSize: value } : u)));
   };
@@ -462,6 +470,8 @@ export default function TimingEditor({ active = true }) {
           onFontSizeChange={setUnitFontSize}
           onColorChange={setUnitColor}
           onNudge={nudge}
+          onSelectWarning={selectRow}
+          onResolveWarning={resolveWarningAt}
         />
       </div>
 
