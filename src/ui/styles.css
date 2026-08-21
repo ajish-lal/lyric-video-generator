@@ -300,6 +300,45 @@ pre {
   color: #e5e7eb;
 }
 
+.editor-settings .export-range {
+  gap: 0.35rem;
+}
+
+.export-range-title {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.export-range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.export-range-label {
+  width: 2.6rem;
+  color: #cbd5e1;
+}
+
+.editor-settings .export-range input {
+  width: 5rem;
+}
+
+.export-range-row button {
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.export-range-hint {
+  font-size: 0.72rem;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
 .preview-stage {
   position: relative;
   width: min(100%, calc(62vh * var(--preview-ratio, 1.7778)));

@@ -335,6 +335,22 @@ export default function TimingEditor({ active = true }) {
     setConfig((c) => (c ? { ...c, wordDisplay: { ...(c.wordDisplay || {}), mode } } : c));
   };
 
+  // Merge an export-range patch; a null value clears that bound. Drops the
+  // whole exportRange object once both bounds are cleared.
+  const setExportRange = (patch) => {
+    setConfig((c) => {
+      if (!c) return c;
+      const next = { ...(c.exportRange || {}), ...patch };
+      if (next.start == null) delete next.start;
+      if (next.end == null) delete next.end;
+      if (Object.keys(next).length === 0) {
+        const { exportRange, ...rest } = c;
+        return rest;
+      }
+      return { ...c, exportRange: next };
+    });
+  };
+
   const nudge = (delta, edge) => {
     if (!selected) return;
     const start = edge === 'start' ? round(Math.max(0, selected.start + delta)) : selected.start;
@@ -368,6 +384,8 @@ export default function TimingEditor({ active = true }) {
   const resH = config?.resolution?.height ?? 1080;
   const globalFontSize = config?.typography?.fontSize ?? 160;
   const wordDisplayMode = config?.wordDisplay?.mode === 'cumulative' ? 'cumulative' : 'single-word';
+  const exportStart = config?.exportRange?.start ?? null;
+  const exportEnd = config?.exportRange?.end ?? null;
   const resPreset = `${resW}x${resH}`;
 
   return (
@@ -399,9 +417,14 @@ export default function TimingEditor({ active = true }) {
         resPreset={resPreset}
         globalFontSize={globalFontSize}
         wordDisplayMode={wordDisplayMode}
+        exportStart={exportStart}
+        exportEnd={exportEnd}
+        currentTime={currentTime}
+        duration={duration}
         onResolutionChange={setResolution}
         onGlobalFontSizeChange={setGlobalFontSize}
         onWordDisplayModeChange={setWordDisplayMode}
+        onExportRangeChange={setExportRange}
       />
 
       <ShortcutsLegend />

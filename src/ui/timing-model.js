@@ -16,6 +16,30 @@ export const formatTime = (seconds) => {
   return `${m}:${String(s).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
 };
 
+/** Short `m:ss` clock (no milliseconds), for compact export-range display. */
+export const formatClock = (seconds) => {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+/**
+ * Parse a time entered as `mm:ss(.ms)`, `hh:mm:ss`, or plain seconds into a
+ * number of seconds. Returns null when the input is blank or unparseable.
+ */
+export const parseTimeInput = (value) => {
+  const text = String(value ?? '').trim();
+  if (!text) return null;
+  if (text.includes(':')) {
+    const parts = text.split(':').map((p) => Number(p));
+    if (parts.some((n) => Number.isNaN(n))) return null;
+    return parts.reduce((acc, n) => acc * 60 + n, 0);
+  }
+  const n = Number(text);
+  return Number.isNaN(n) ? null : n;
+};
+
 /**
  * Flatten a ProjectConfig into an ordered list of timed units. Words are
  * preferred; a line with no timed words becomes a single unit. Each unit keeps
